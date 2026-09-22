@@ -1,9 +1,6 @@
-// Better Auth client — used in frontend scripts.
-import { createAuthClient } from 'better-auth/client';
-
-export const authClient = createAuthClient({
-  baseURL: '/api/auth',
-});
+// Simple auth client — uses raw fetch to Better Auth endpoints.
+// Avoids the Better Auth client library's polling/broadcast complexity
+// which can hang in certain proxy environments.
 
 export type SessionUser = {
   id: string;
@@ -19,17 +16,22 @@ export type SessionUser = {
 /** Get the current session user or null. */
 export async function getSession(): Promise<SessionUser | null> {
   try {
-    const { data, error } = await authClient.getSession();
-    if (error || !data) return null;
+    const res = await fetch('/api/auth/get-session', {
+      credentials: 'include',
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (!data || !data.user) return null;
+    const u = data.user;
     return {
-      id: data.user.id,
-      email: data.user.email,
-      name: data.user.name,
-      role: (data.user as Record<string, unknown>).role as string,
-      company: (data.user as Record<string, unknown>).company as string | undefined,
-      phone: (data.user as Record<string, unknown>).phone as string | undefined,
-      country: (data.user as Record<string, unknown>).country as string | undefined,
-      status: (data.user as Record<string, unknown>).status as string | undefined,
+      id: u.id,
+      email: u.email,
+      name: u.name,
+      role: u.role,
+      company: u.company ?? undefined,
+      phone: u.phone ?? undefined,
+      country: u.country ?? undefined,
+      status: u.status ?? undefined,
     };
   } catch {
     return null;
@@ -58,6 +60,15 @@ export async function requireAdmin(): Promise<SessionUser> {
 
 /** Sign out and redirect home. */
 export async function signOut(): Promise<void> {
-  await authClient.signOut();
+  try {
+    await fetch('/api/auth/sign-out', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: '{}',
+      credentials: 'include',
+    });
+  } catch {
+    // ignore — redirect anyway
+  }
   window.location.href = '/';
 }
