@@ -1,0 +1,148 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { countries } from '../../data/countries';
+
+export function getStaticPaths() {
+  return countries.map(c => ({ params: { country: c.slug } }));
+}
+
+const country = countries.find(c => c.slug === Astro.params.country)!;
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Service',
+  name: `Sell scrap in ${country.name} — European Scrap Market`,
+  serviceType: 'Metal scrap marketplace',
+  description: `Sell metal scrap in ${country.name}. Describe your scrap — a verified scrap yard picks up the case and contacts you with a current daily price. Free for sellers.`,
+  provider: { '@id': 'https://europeanscrapmarket.com/#org' },
+  areaServed: { '@type': 'Country', name: country.name },
+  audience: [
+    { '@type': 'Audience', audienceType: 'Individuals and companies selling metal scrap' },
+    { '@type': 'Audience', audienceType: 'Scrap yards and metal recyclers' },
+  ],
+};
+
+// Neighbouring countries for internal linking
+const others = countries.filter(c => c.slug !== country.slug).slice(0, 12);
+---
+
+<Layout
+  title={`Sell scrap in ${country.name} — a verified yard contacts you | European Scrap Market`}
+  description={`Sell metal scrap in ${country.name} (${country.capital} area): describe your scrap, a verified scrap yard picks up the case and contacts you with a current daily price. Free for sellers.`}
+  jsonLd={jsonLd}
+>
+
+<!-- Breadcrumb -->
+<div class="mx-auto max-w-7xl px-5 pt-6 text-sm text-[var(--color-faint)] sm:px-8">
+  <a href="/" class="hover:text-[var(--color-accent)]">Home</a>
+  <span class="mx-2">/</span>
+  <a href="/sell-scrap/" class="hover:text-[var(--color-accent)]">Sell scrap</a>
+  <span class="mx-2">/</span>
+  <span class="text-[var(--color-ink)]">{country.name}</span>
+</div>
+
+<!-- Country hero -->
+<section class="relative overflow-hidden">
+  <div class="aura"></div>
+  <div class="mx-auto max-w-7xl px-5 py-14 sm:px-8">
+    <p class="mono" data-reveal>{country.eu ? 'EU MEMBER STATE' : 'EUROPEAN MARKET'}</p>
+    <h1 class="display h-hero mt-4" data-reveal>
+      Sell scrap in <span class="grad-text">{country.name}</span>
+    </h1>
+    <p class="mt-6 max-w-xl text-lg leading-relaxed text-[var(--color-muted)]" data-reveal>
+      Describe your scrap and a verified yard in {country.name} picks up the case and contacts you —
+      often the same day. Free for sellers, no obligation.
+    </p>
+    <div class="mt-8 flex flex-wrap gap-3" data-reveal>
+      <a href="/submit/" class="btn btn-accent">Sell your scrap <span class="arrow">→</span></a>
+      <a href="/marketplace/" class="btn btn-ghost">View marketplace</a>
+    </div>
+
+    <div class="mt-10 grid max-w-lg grid-cols-4 divide-x divide-[var(--color-line-strong)] border-y border-[var(--color-line)] py-4" data-reveal>
+      <div class="px-2">
+        <p class="display text-lg font-bold">{country.scrapYards.toLocaleString('en')}</p>
+        <p class="mono mt-0.5 text-[0.6rem]">YARDS</p>
+      </div>
+      <div class="px-2">
+        <p class="display text-lg font-bold">{country.keyMetals.length}</p>
+        <p class="mono mt-0.5 text-[0.6rem]">KEY METALS</p>
+      </div>
+      <div class="px-2">
+        <p class="display text-lg font-bold">{country.currency}</p>
+        <p class="mono mt-0.5 text-[0.6rem]">CURRENCY</p>
+      </div>
+      <div class="px-2">
+        <p class="display text-lg font-bold">€0</p>
+        <p class="mono mt-0.5 text-[0.6rem]">FOR SELLERS</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Local market info -->
+<section class="mx-auto max-w-7xl px-5 py-16 sm:px-8">
+  <div class="grid gap-12 lg:grid-cols-[1fr_20rem]">
+    <div data-reveal>
+      <h2 class="display h-section">Scrap metal in {country.name}</h2>
+      <p class="mt-4 text-base leading-relaxed text-[var(--color-muted)]">
+        {country.localNote}
+      </p>
+      <p class="mt-4 text-base leading-relaxed text-[var(--color-muted)]">
+        European Scrap Market connects you with {country.scrapYards.toLocaleString('en')} verified scrap yards across {country.name}.
+        Whether you have a single batch from a renovation, production scrap from a workshop,
+        or recurring container volumes from industry, a yard in your area will take the case and contact you directly.
+      </p>
+      <p class="mt-4 text-base leading-relaxed text-[var(--color-muted)]">
+        The most traded metals in {country.name} are {country.keyMetals.join(', ').toLowerCase()}.
+        Prices follow the London Metal Exchange (LME) and are set daily. You get a current price
+        from the yard that accepts your case — and you are never locked in.
+      </p>
+      <p class="mt-4 text-base leading-relaxed text-[var(--color-muted)]">
+        Submitting a request is free and without obligation. The yard that takes your case pays
+        for the lead — you pay nothing.
+      </p>
+    </div>
+
+    <div class="rounded-xl border border-[var(--color-line)] bg-white p-6" data-reveal>
+      <p class="mono mb-3">KEY METALS IN {country.name.toUpperCase()}</p>
+      <div class="space-y-2">
+        {country.keyMetals.map(m => (
+          <div class="flex items-center gap-3">
+            <span class="h-2 w-2 rounded-full bg-[var(--color-accent)]"></span>
+            <span class="text-sm font-medium">{m}</span>
+          </div>
+        ))}
+      </div>
+      <div class="mt-6 border-t border-[var(--color-line)] pt-4">
+        <p class="mono mb-2 text-[var(--color-faint)]">LOCAL FACTS</p>
+        <p class="text-sm text-[var(--color-muted)]">
+          Capital: <strong>{country.capital}</strong><br />
+          Population: <strong>{country.population.toLocaleString('en')}</strong><br />
+          Language: <strong>{country.lang}</strong><br />
+          Currency: <strong>{country.currency}</strong>
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="border-y border-[var(--color-line)] bg-white">
+  <div class="mx-auto flex max-w-7xl flex-col items-center gap-6 px-5 py-16 text-center sm:px-8">
+    <h2 class="display h-section max-w-xl" data-reveal>Ready to sell your scrap in {country.name}?</h2>
+    <a href="/submit/" class="btn btn-accent" data-reveal>Submit your request <span class="arrow">→</span></a>
+  </div>
+</section>
+
+<!-- Other countries -->
+<section class="mx-auto max-w-7xl px-5 py-16 sm:px-8">
+  <h2 class="display text-xl font-bold" data-reveal>Other countries</h2>
+  <div class="mt-6 flex flex-wrap gap-2" data-reveal>
+    {others.map(c => (
+      <a href={`/sell-scrap/${c.slug}/`} class="ort-chip">{c.name}</a>
+    ))}
+    <a href="/sell-scrap/" class="ort-chip border-[var(--color-accent)] text-[var(--color-accent)]">All countries →</a>
+  </div>
+</section>
+
+</Layout>

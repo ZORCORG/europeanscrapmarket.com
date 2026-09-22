@@ -1,0 +1,108 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { countries, scrapClasses } from '../../data/countries';
+
+const sortedCountries = [...countries].sort((a, b) => a.name.localeCompare(b.name));
+---
+
+<Layout
+  title="Submit your scrap — sell metal scrap | European Scrap Market"
+  description="Describe your scrap metal in 30 seconds. A verified yard in your country picks up the case and contacts you. Free for sellers, no obligation."
+>
+
+<div class="mx-auto max-w-7xl px-5 pt-6 text-sm text-[var(--color-faint)] sm:px-8">
+  <a href="/" class="hover:text-[var(--color-accent)]">Home</a>
+  <span class="mx-2">/</span>
+  <span class="text-[var(--color-ink)]">Submit</span>
+</div>
+
+<section class="mx-auto max-w-3xl px-5 py-12 sm:px-8">
+  <p class="mono" data-reveal>FREE FOR SELLERS · 30 SECONDS</p>
+  <h1 class="display h-section mt-3" data-reveal>Sell your <span class="grad-text">scrap</span></h1>
+  <p class="mt-4 text-sm text-[var(--color-muted)]" data-reveal>
+    Describe your scrap. A verified yard picks up the case and contacts you — often the same day.
+    No obligation.
+  </p>
+
+  <form id="scrap-form" class="mt-10 space-y-6" data-reveal>
+    <!-- Material -->
+    <div>
+      <label for="material" class="display block text-sm font-bold">Material</label>
+      <select id="material" name="material" required class="mt-2 w-full rounded-lg border border-[var(--color-line-strong)] bg-white px-4 py-3 text-sm outline-none focus:border-[var(--color-accent)]">
+        <option value="">Select material…</option>
+        {scrapClasses.map(sc => (
+          <option value={sc.slug}>{sc.name}</option>
+        ))}
+      </select>
+    </div>
+
+    <!-- Weight -->
+    <div>
+      <label for="weight" class="display block text-sm font-bold">Approximate weight (kg)</label>
+      <input id="weight" name="weight" type="number" min="1" required placeholder="e.g. 500" class="mt-2 w-full rounded-lg border border-[var(--color-line-strong)] bg-white px-4 py-3 text-sm outline-none focus:border-[var(--color-accent)]" />
+    </div>
+
+    <!-- Country -->
+    <div>
+      <label for="country" class="display block text-sm font-bold">Country</label>
+      <select id="country" name="country" required class="mt-2 w-full rounded-lg border border-[var(--color-line-strong)] bg-white px-4 py-3 text-sm outline-none focus:border-[var(--color-accent)]">
+        <option value="">Select country…</option>
+        {sortedCountries.map(c => (
+          <option value={c.slug}>{c.name}</option>
+        ))}
+      </select>
+    </div>
+
+    <!-- Description -->
+    <div>
+      <label for="description" class="display block text-sm font-bold">Description (optional)</label>
+      <textarea id="description" name="description" rows="3" placeholder="Describe the scrap — condition, origin, any sorting done…" class="mt-2 w-full rounded-lg border border-[var(--color-line-strong)] bg-white px-4 py-3 text-sm outline-none focus:border-[var(--color-accent)]"></textarea>
+    </div>
+
+    <!-- Contact -->
+    <div class="grid gap-4 sm:grid-cols-2">
+      <div>
+        <label for="name" class="display block text-sm font-bold">Your name</label>
+        <input id="name" name="name" type="text" required class="mt-2 w-full rounded-lg border border-[var(--color-line-strong)] bg-white px-4 py-3 text-sm outline-none focus:border-[var(--color-accent)]" />
+      </div>
+      <div>
+        <label for="email" class="display block text-sm font-bold">Email</label>
+        <input id="email" name="email" type="email" required placeholder="you@example.com" class="mt-2 w-full rounded-lg border border-[var(--color-line-strong)] bg-white px-4 py-3 text-sm outline-none focus:border-[var(--color-accent)]" />
+      </div>
+    </div>
+
+    <div>
+      <label for="phone" class="display block text-sm font-bold">Phone (optional)</label>
+      <input id="phone" name="phone" type="tel" placeholder="+46 …" class="mt-2 w-full rounded-lg border border-[var(--color-line-strong)] bg-white px-4 py-3 text-sm outline-none focus:border-[var(--color-accent)]" />
+    </div>
+
+    <button type="submit" class="btn btn-accent w-full justify-center text-base">
+      Submit — a yard contacts you <span class="arrow">→</span>
+    </button>
+  </form>
+
+  <!-- Success message -->
+  <div id="success-msg" class="mt-8 hidden rounded-xl border border-green-300 bg-green-50 p-6 text-center">
+    <p class="display text-lg font-bold text-green-800">Request submitted!</p>
+    <p class="mt-2 text-sm text-green-700">
+      Your request is in the network. A verified yard in your country will pick it up and contact you —
+      often the same day. Check your email for a secure login link to track your case.
+    </p>
+    <p class="mt-2 text-xs text-green-600">This is a demo form — no data has been sent.</p>
+  </div>
+</section>
+
+<script is:inline>
+  (function () {
+    const form = document.getElementById('scrap-form');
+    const success = document.getElementById('success-msg');
+    if (!form) return;
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      form.classList.add('hidden');
+      success.classList.remove('hidden');
+    });
+  })();
+</script>
+
+</Layout>

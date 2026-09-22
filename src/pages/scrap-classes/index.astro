@@ -1,0 +1,46 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { scrapClasses } from '../../data/countries';
+---
+
+<Layout
+  title="Scrap classes — metal categories | European Scrap Market"
+  description="All scrap metal classes we trade: copper, brass, aluminium, stainless steel, steel & iron, cable, and mixed production scrap. With descriptions and sub-grades."
+>
+
+<div class="mx-auto max-w-7xl px-5 pt-6 text-sm text-[var(--color-faint)] sm:px-8">
+  <a href="/" class="hover:text-[var(--color-accent)]">Home</a>
+  <span class="mx-2">/</span>
+  <span class="text-[var(--color-ink)]">Scrap classes</span>
+</div>
+
+<section class="mx-auto max-w-7xl px-5 py-12 sm:px-8">
+  <p class="mono" data-reveal>CLASSIFICATION</p>
+  <h1 class="display h-section mt-3" data-reveal>Scrap <span class="grad-text">classes</span></h1>
+  <p class="mt-4 max-w-xl text-sm text-[var(--color-muted)]" data-reveal>
+    Every metal has a class. The cleaner the scrap, the higher the price. Sort your material
+    and a yard can give you a precise daily quote.
+  </p>
+
+  <div class="mt-12 space-y-16">
+    {scrapClasses.map((sc, i) => (
+      <div id={sc.slug} class="scroll-mt-24" data-reveal>
+        <div class="flex items-baseline gap-4">
+          <span class="mono text-[var(--color-faint)]">{String(i + 1).padStart(2, '0')}</span>
+          <h2 class="display text-2xl font-bold">{sc.name}</h2>
+        </div>
+        <p class="mt-2 max-w-xl text-sm text-[var(--color-muted)]">{sc.description}</p>
+        <div class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {sc.metals.map(m => (
+            <div class="rounded-lg border border-[var(--color-line)] bg-white p-4">
+              <p class="text-sm font-semibold">{m}</p>
+              <a href="/submit/" class="mt-2 block text-xs font-bold text-[var(--color-accent)]">Sell this →</a>
+            </div>
+          ))}
+        </div>
+      </div>
+    ))}
+  </div>
+</section>
+
+</Layout>

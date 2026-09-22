@@ -1,0 +1,85 @@
+---
+import Layout from '../../layouts/Layout.astro';
+
+const steps = [
+  { title: 'Create a free account', desc: 'Sign up with just your email — no password, no long application. You fill in the rest when you want to take your first lead.' },
+  { title: 'Provide company details', desc: 'Company registration, tax status, and environmental permit or waste transport registration for your country.' },
+  { title: 'Accept safety commitments', desc: 'Traceable payment without cash, ID verification, and documented transactions. This is non-negotiable.' },
+  { title: 'We verify and activate', desc: 'We review your application manually. Normally activated within one business day.' },
+  { title: 'Start receiving leads', desc: 'Browse open batches on the marketplace. Accept a lead to unlock the seller\'s contact details — €299 per lead.' },
+];
+---
+
+<Layout
+  title="Become a partner — for scrap yards | European Scrap Market"
+  description="Join Europe's scrap metal network. Free account — pay €299 per lead for contact details. Verified in one business day. No monthly commitment."
+>
+
+<div class="mx-auto max-w-7xl px-5 pt-6 text-sm text-[var(--color-faint)] sm:px-8">
+  <a href="/" class="hover:text-[var(--color-accent)]">Home</a>
+  <span class="mx-2">/</span>
+  <span class="text-[var(--color-ink)]">Become a partner</span>
+</div>
+
+<section class="relative overflow-hidden">
+  <div class="aura"></div>
+  <div class="mx-auto grid max-w-7xl items-center gap-12 px-5 py-14 sm:px-8 lg:grid-cols-2">
+    <div>
+      <p class="mono" data-reveal>FOR SCRAP YARDS</p>
+      <h1 class="display h-section mt-4" data-reveal>
+        Become a <span class="grad-text">partner</span>
+      </h1>
+      <p class="mt-6 max-w-md text-lg leading-relaxed text-[var(--color-muted)]" data-reveal>
+        Join Europe's scrap metal network and receive verified leads from sellers in your country.
+        Free account — pay only for the leads you accept.
+      </p>
+      <div class="mt-8 flex flex-wrap gap-3" data-reveal>
+        <a href="/submit/" class="btn btn-accent">Create free account <span class="arrow">→</span></a>
+        <a href="/pricing/" class="btn btn-ghost">See pricing</a>
+      </div>
+    </div>
+    <div class="rounded-2xl border border-[var(--color-line)] bg-white p-8" data-reveal>
+      <p class="mono text-[var(--color-faint)]">FREE ACCOUNT · 30 SECONDS</p>
+      <h2 class="display mt-3 text-lg font-bold">Start receiving leads</h2>
+      <form class="mt-4 space-y-4">
+        <div>
+          <label class="display block text-sm font-bold">Email</label>
+          <input type="email" required placeholder="you@yard.com" class="mt-2 w-full rounded-lg border border-[var(--color-line-strong)] bg-white px-4 py-3 text-sm outline-none focus:border-[var(--color-accent)]" />
+        </div>
+        <div>
+          <label class="display block text-sm font-bold">Company name</label>
+          <input type="text" required placeholder="Your scrap yard" class="mt-2 w-full rounded-lg border border-[var(--color-line-strong)] bg-white px-4 py-3 text-sm outline-none focus:border-[var(--color-accent)]" />
+        </div>
+        <div>
+          <label class="display block text-sm font-bold">Country</label>
+          <input type="text" required placeholder="Germany" class="mt-2 w-full rounded-lg border border-[var(--color-line-strong)] bg-white px-4 py-3 text-sm outline-none focus:border-[var(--color-accent)]" />
+        </div>
+        <button type="button" class="btn btn-accent w-full justify-center" onclick="this.closest('form').nextElementSibling.classList.remove('hidden');this.closest('form').classList.add('hidden');">
+          Continue →
+        </button>
+      </form>
+      <div class="mt-4 hidden rounded-lg border border-green-300 bg-green-50 p-4 text-sm text-green-700">
+        <strong>Account created!</strong> Check your email for a secure login link. This is a demo form — no data has been sent.
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="border-t border-[var(--color-line)] bg-white">
+  <div class="mx-auto max-w-7xl px-5 py-16 sm:px-8">
+    <h2 class="display h-section" data-reveal>How it works</h2>
+    <ol class="mt-10 space-y-8">
+      {steps.map((s, i) => (
+        <li class="flex gap-6" data-reveal>
+          <span class="display flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[var(--color-ink)] text-lg font-bold text-white">{i + 1}</span>
+          <div>
+            <h3 class="display text-lg font-bold">{s.title}</h3>
+            <p class="mt-1 max-w-lg text-sm text-[var(--color-muted)]">{s.desc}</p>
+          </div>
+        </li>
+      ))}
+    </ol>
+  </div>
+</section>
+
+</Layout>

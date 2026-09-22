@@ -1,0 +1,78 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { scrapClasses } from '../../data/countries';
+
+// Placeholder prices — clearly labelled as such in the UI
+// Real implementation would pull from an LME/feed API
+const placeholderPrices = [
+  { class: 'Copper', grade: 'Bright copper wire', pricePerKg: 6.20, unit: 'EUR/kg' },
+  { class: 'Copper', grade: 'Mixed copper', pricePerKg: 5.10, unit: 'EUR/kg' },
+  { class: 'Brass', grade: 'Yellow brass', pricePerKg: 3.40, unit: 'EUR/kg' },
+  { class: 'Aluminium', grade: 'Extrusions (clean)', pricePerKg: 1.30, unit: 'EUR/kg' },
+  { class: 'Aluminium', grade: 'Cast aluminium', pricePerKg: 0.95, unit: 'EUR/kg' },
+  { class: 'Stainless Steel', grade: '304 solids', pricePerKg: 2.10, unit: 'EUR/kg' },
+  { class: 'Stainless Steel', grade: '316 solids', pricePerKg: 2.80, unit: 'EUR/kg' },
+  { class: 'Steel & Iron', grade: 'HMS 1&2', pricePerKg: 0.28, unit: 'EUR/kg' },
+  { class: 'Steel & Iron', grade: 'Light iron', pricePerKg: 0.18, unit: 'EUR/kg' },
+  { class: 'Cable', grade: 'Heavy copper cable', pricePerKg: 3.90, unit: 'EUR/kg' },
+];
+---
+
+<Layout
+  title="Today's scrap metal prices | European Scrap Market"
+  description="Current scrap metal prices across Europe. Copper, brass, aluminium, stainless steel, and steel prices. Placeholder reference prices — request a real quote from a verified yard."
+>
+
+<div class="mx-auto max-w-7xl px-5 pt-6 text-sm text-[var(--color-faint)] sm:px-8">
+  <a href="/" class="hover:text-[var(--color-accent)]">Home</a>
+  <span class="mx-2">/</span>
+  <span class="text-[var(--color-ink)]">Scrap prices</span>
+</div>
+
+<section class="mx-auto max-w-7xl px-5 py-12 sm:px-8">
+  <p class="mono" data-reveal>PRICE REFERENCE</p>
+  <h1 class="display h-section mt-3" data-reveal>
+    Today's scrap <span class="grad-text">prices</span>
+  </h1>
+  <p class="mt-4 max-w-xl text-sm text-[var(--color-muted)]" data-reveal>
+    Reference prices for common scrap metals. Metal prices follow the London Metal Exchange (LME)
+    and change daily. The yard that takes your case gives you a current daily price.
+  </p>
+
+  <div class="mt-6 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800" data-reveal>
+    <strong>Placeholder:</strong> These are indicative reference prices for the first version. They are not live market quotes. Request a real quote by submitting your scrap.
+  </div>
+
+  <div class="mt-8 overflow-x-auto">
+    <table class="w-full border-collapse text-sm">
+      <thead>
+        <tr class="border-b border-[var(--color-line-strong)]">
+          <th class="px-4 py-3 text-left font-semibold">Material</th>
+          <th class="px-4 py-3 text-left font-semibold">Grade</th>
+          <th class="px-4 py-3 text-right font-semibold">Indicative price</th>
+        </tr>
+      </thead>
+      <tbody>
+        {placeholderPrices.map(p => (
+          <tr class="border-b border-[var(--color-line)]">
+            <td class="px-4 py-3 font-medium">{p.class}</td>
+            <td class="px-4 py-3 text-[var(--color-muted)]">{p.grade}</td>
+            <td class="px-4 py-3 text-right font-bold text-[var(--color-accent)]">
+              {p.pricePerKg.toFixed(2)} {p.unit}
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="mt-8 rounded-xl bg-[var(--color-ink)] p-8 text-center text-white" data-reveal>
+    <h2 class="display text-lg font-bold">Want a real quote for your scrap?</h2>
+    <p class="mx-auto mt-2 max-w-md text-sm text-white/60">
+      Submit your scrap and a verified yard contacts you with a current daily price — free, no obligation.
+    </p>
+    <a href="/submit/" class="btn btn-accent mt-6">Get a quote <span class="arrow">→</span></a>
+  </div>
+</section>
+
+</Layout>

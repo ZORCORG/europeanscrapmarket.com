@@ -1,0 +1,87 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { scrapClasses } from '../../data/countries';
+
+// Placeholder listings — labelled as placeholder in the UI
+const listings = [
+  { material: 'Mixed farm clearance', weight: 4000, country: 'Sweden', slug: 'gardsrensning-blandat-southern-sweden' },
+  { material: 'Copper cable — heavy', weight: 1200, country: 'Germany', slug: 'copper-cable-heavy-munich' },
+  { material: 'Aluminium extrusions', weight: 2500, country: 'Netherlands', slug: 'aluminium-extrusions-rotterdam' },
+  { material: 'Stainless steel 304 turnings', weight: 800, country: 'Italy', slug: 'stainless-304-turnings-brescia' },
+  { material: 'Heavy melting steel', weight: 12000, country: 'Poland', slug: 'hms-12t-warsaw' },
+  { material: 'Brass valves and fittings', weight: 600, country: 'France', slug: 'brass-valves-paris' },
+  { material: 'Cast aluminium — clean', weight: 3500, country: 'Spain', slug: 'cast-aluminium-clean-madrid' },
+  { material: 'Mixed production scrap', weight: 1800, country: 'Czech Republic', slug: 'mixed-production-prague' },
+];
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'ItemList',
+  name: 'Open scrap metal batches — European Scrap Market',
+  description: 'Live scrap metal requests from across Europe. Verified batches from sellers.',
+};
+---
+
+<Layout
+  title="Marketplace — open scrap batches | European Scrap Market"
+  description="Live scrap metal requests from across Europe. Browse open batches — material, weight, and country. Verified sellers."
+  jsonLd={jsonLd}
+>
+
+<div class="mx-auto max-w-7xl px-5 pt-6 text-sm text-[var(--color-faint)] sm:px-8">
+  <a href="/" class="hover:text-[var(--color-accent)]">Home</a>
+  <span class="mx-2">/</span>
+  <span class="text-[var(--color-ink)]">Marketplace</span>
+</div>
+
+<section class="mx-auto max-w-7xl px-5 py-12 sm:px-8">
+  <div class="flex flex-wrap items-end justify-between gap-4">
+    <div>
+      <p class="mono" data-reveal>MARKETPLACE</p>
+      <h1 class="display h-section mt-3" data-reveal>
+        Open <span class="grad-text">batches</span> right now
+      </h1>
+      <p class="mt-4 max-w-xl text-sm text-[var(--color-muted)]" data-reveal>
+        Scrap metal requests from across Europe. Material, weight, and country.
+        {listings.length} open batches — <span class="font-semibold text-[var(--color-accent)]">placeholder data shown below</span>.
+      </p>
+    </div>
+    <a href="/submit/" class="btn btn-accent" data-reveal>Submit your scrap <span class="arrow">→</span></a>
+  </div>
+
+  <!-- Placeholder notice -->
+  <div class="mt-6 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800" data-reveal>
+    <strong>Placeholder:</strong> These listings are demo data for the first version. When the platform goes live, real requests from verified sellers will appear here.
+  </div>
+
+  <div class="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+    {listings.map(l => (
+      <a href={`/marketplace/${l.slug}/`} class="tcard" data-reveal>
+        <div class="media relative h-48 overflow-hidden bg-[var(--color-bg)]">
+          <div class="flex h-full w-full items-center justify-center bg-gradient-to-br from-[var(--color-line)] to-[var(--color-bg)]">
+            <span class="text-4xl text-[var(--color-line-strong)]">⚙</span>
+          </div>
+          <span class="card-badge absolute right-3 top-3" style="background:rgba(20,21,26,0.82);color:#fff">{l.country}</span>
+        </div>
+        <div class="p-4">
+          <h3 class="display text-sm font-bold">{l.material}</h3>
+          <p class="mt-1 text-xs text-[var(--color-muted)]">{l.weight.toLocaleString('en')} kg</p>
+        </div>
+      </a>
+    ))}
+  </div>
+</section>
+
+<!-- Filter by class -->
+<section class="border-t border-[var(--color-line)] bg-white">
+  <div class="mx-auto max-w-7xl px-5 py-12 sm:px-8">
+    <h2 class="display text-lg font-bold" data-reveal>Filter by material</h2>
+    <div class="mt-4 flex flex-wrap gap-2" data-reveal>
+      {scrapClasses.map(sc => (
+        <a href={`/scrap-classes/#${sc.slug}`} class="ort-chip">{sc.name}</a>
+      ))}
+    </div>
+  </div>
+</section>
+
+</Layout>

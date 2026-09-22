@@ -1,0 +1,225 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { countries, scrapClasses, faqs } from '../data/countries';
+
+const totalYards = countries.reduce((sum, c) => sum + c.scrapYards, 0);
+const euCount = countries.filter(c => c.eu).length;
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map(f => ({
+    '@type': 'Question',
+    name: f.q,
+    acceptedAnswer: { '@type': 'Answer', text: f.a },
+  })),
+};
+
+const popularCountries = ['germany', 'france', 'italy', 'spain', 'united-kingdom', 'poland', 'netherlands', 'sweden'];
+const featured = countries.filter(c => popularCountries.includes(c.slug));
+---
+
+<Layout
+  title="Buy and sell metal scrap across Europe | European Scrap Market"
+  description="Buy and sell metal scrap across Europe. Describe your scrap — a verified scrap yard picks up the case and contacts you. Free for sellers in 30+ countries."
+  jsonLd={jsonLd}
+>
+
+<!-- HERO -->
+<section class="relative overflow-hidden">
+  <div class="aura"></div>
+  <div class="mx-auto grid max-w-7xl items-center gap-12 px-5 pb-16 pt-14 sm:px-8 lg:grid-cols-[1.05fr_0.95fr] lg:gap-16">
+    <div>
+      <p class="mono" data-reveal>Europe's marketplace for metal scrap</p>
+      <h1 class="display h-hero mt-5" data-reveal>
+        Buy and sell scrap <span class="grad-text">across Europe</span>
+      </h1>
+      <p class="mt-6 max-w-md text-lg leading-relaxed text-[var(--color-muted)]" data-reveal>
+        Describe your scrap. A verified scrap yard picks up the case and contacts you,
+        often the same day. Free for you as a seller.
+      </p>
+      <div class="mt-8 flex flex-wrap gap-3" data-reveal>
+        <a href="/submit/" class="btn btn-accent">Sell your scrap <span class="arrow">→</span></a>
+        <a href="/marketplace/" class="btn btn-ghost">Explore the marketplace</a>
+      </div>
+      <div class="mt-10 grid max-w-md grid-cols-3 divide-x divide-[var(--color-line-strong)] border-y border-[var(--color-line)] py-4" data-reveal>
+        <div class="pr-4">
+          <p class="display text-xl font-bold">Verified</p>
+          <p class="mono mt-0.5">TRUSTED YARDS</p>
+        </div>
+        <div class="px-4">
+          <p class="display text-xl font-bold">{countries.length}</p>
+          <p class="mono mt-0.5">COUNTRIES</p>
+        </div>
+        <div class="pl-4">
+          <p class="display text-xl font-bold">€0</p>
+          <p class="mono mt-0.5">FOR SELLERS</p>
+        </div>
+      </div>
+    </div>
+    <div class="hero-feat" data-reveal>
+      <div class="hero-feat-card">
+        <img src="/img/hero.jpg" alt="Scrap yard with crane lifting sorted metal" fetchpriority="high" width="960" height="720" />
+        <div class="hero-feat-scrim">
+          <p class="hero-feat-kicker">
+            <span class="hero-live"></span> Live on the marketplace
+          </p>
+          <h2 class="display hero-feat-title">Mixed farm clearance · 4 000 kg</h2>
+          <p class="hero-feat-meta">Southern Sweden</p>
+          <span class="btn btn-accent mt-4">View batch <span class="arrow">→</span></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="how-it-works" class="mx-auto max-w-7xl scroll-mt-24 px-5 py-20 sm:px-8">
+  <h2 class="display h-section max-w-2xl" data-reveal>
+    How <span class="grad-text">European Scrap Market</span> works
+  </h2>
+  <p class="mt-4 max-w-xl text-sm leading-relaxed text-[var(--color-muted)]" data-reveal>
+    One request goes to Europe's scrap network. A verified yard in your country picks it up and contacts you directly.
+  </p>
+
+  <div class="mt-12 grid gap-8 md:grid-cols-3">
+    <div data-reveal>
+      <div class="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-[var(--color-ink)] text-white">
+        <span class="display text-lg font-bold">1</span>
+      </div>
+      <h3 class="display text-lg font-bold">Describe your scrap</h3>
+      <p class="mt-2 text-sm text-[var(--color-muted)]">
+        Material, approximate weight, and your country. Takes 30 seconds — no account needed.
+      </p>
+    </div>
+    <div data-reveal>
+      <div class="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-[var(--color-ink)] text-white">
+        <span class="display text-lg font-bold">2</span>
+      </div>
+      <h3 class="display text-lg font-bold">A yard picks it up</h3>
+      <p class="mt-2 text-sm text-[var(--color-muted)]">
+        A verified scrap yard in your area accepts the case and contacts you directly — often the same day.
+      </p>
+    </div>
+    <div data-reveal>
+      <div class="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-[var(--color-accent)] text-white">
+        <span class="display text-lg font-bold">3</span>
+      </div>
+      <h3 class="display text-lg font-bold">You decide</h3>
+      <p class="mt-2 text-sm text-[var(--color-muted)]">
+        You get a current daily price. No obligation — if it doesn't suit you, the case passes to another yard.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- MATERIALS -->
+<section id="materials" class="border-y border-[var(--color-line)] bg-white">
+  <div class="mx-auto max-w-7xl px-5 py-20 sm:px-8">
+    <h2 class="display h-section max-w-2xl" data-reveal>
+      Materials <span class="grad-text">we trade</span>
+    </h2>
+    <p class="mt-4 max-w-xl text-sm text-[var(--color-muted)]" data-reveal>
+      All common metal scrap — from a single batch to recurring container volumes.
+    </p>
+
+    <div class="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+      {scrapClasses.map((sc, i) => (
+        <a href={`/scrap-classes/#${sc.slug}`} class="tcard p-6" data-reveal>
+          <p class="mono text-[var(--color-faint)]">{String(i + 1).padStart(2, '0')}</p>
+          <h3 class="display mt-2 text-lg font-bold">{sc.name}</h3>
+          <p class="mt-1 text-xs text-[var(--color-muted)]">{sc.description}</p>
+          <div class="mt-4 flex flex-wrap gap-1.5">
+            {sc.metals.map(m => (
+              <span class="rounded border border-[var(--color-line)] px-2 py-0.5 text-[0.65rem] text-[var(--color-muted)]">{m}</span>
+            ))}
+          </div>
+        </a>
+      ))}
+    </div>
+  </div>
+</section>
+
+<!-- COUNTRY PAGES -->
+<section class="mx-auto max-w-7xl px-5 py-20 sm:px-8">
+  <h2 class="display h-section max-w-2xl" data-reveal>
+    Sell scrap in <span class="grad-text">your country</span>
+  </h2>
+  <p class="mt-4 max-w-xl text-sm text-[var(--color-muted)]" data-reveal>
+    {countries.length} country pages with local scrap market information and verified yards.
+  </p>
+
+  <div class="mt-8 flex flex-wrap gap-2" data-reveal>
+    {countries.map(c => (
+      <a href={`/sell-scrap/${c.slug}/`} class="ort-chip">{c.name}</a>
+    ))}
+  </div>
+</section>
+
+<!-- FOR YARDS -->
+<section class="border-y border-[var(--color-line)] bg-white">
+  <div class="mx-auto grid max-w-7xl items-center gap-12 px-5 py-20 sm:px-8 lg:grid-cols-2">
+    <div data-reveal>
+      <p class="mono">FOR SCRAP YARDS</p>
+      <h2 class="display h-section mt-4">Get verified leads from across Europe</h2>
+      <p class="mt-4 max-w-md text-sm text-[var(--color-muted)]">
+        Join the network and receive requests from sellers in your area. Free account — you only pay
+        for the contact details of leads you accept. No monthly commitment.
+      </p>
+      <div class="mt-8 flex flex-wrap gap-3">
+        <a href="/become-partner" class="btn btn-accent">Become a partner <span class="arrow">→</span></a>
+        <a href="/pricing/" class="btn btn-ghost">See pricing</a>
+      </div>
+    </div>
+    <div class="grid grid-cols-2 gap-4" data-reveal>
+      <div class="rounded-xl border border-[var(--color-line)] bg-[var(--color-bg)] p-6">
+        <p class="display text-3xl font-bold text-[var(--color-accent)]">{totalYards.toLocaleString('en')}</p>
+        <p class="mono mt-1 text-[var(--color-faint)]">VERIFIED YARDS</p>
+      </div>
+      <div class="rounded-xl border border-[var(--color-line)] bg-[var(--color-bg)] p-6">
+        <p class="display text-3xl font-bold text-[var(--color-accent)]">{euCount}</p>
+        <p class="mono mt-1 text-[var(--color-faint)]">EU MEMBER STATES</p>
+      </div>
+      <div class="rounded-xl border border-[var(--color-line)] bg-[var(--color-bg)] p-6">
+        <p class="display text-3xl font-bold text-[var(--color-accent)]">299€</p>
+        <p class="mono mt-1 text-[var(--color-faint)]">PER LEAD / MONTH</p>
+      </div>
+      <div class="rounded-xl border border-[var(--color-line)] bg-[var(--color-bg)] p-6">
+        <p class="display text-3xl font-bold text-[var(--color-accent)]">24h</p>
+        <p class="mono mt-1 text-[var(--color-faint)]">ACTIVATION TIME</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section id="faq" class="mx-auto max-w-7xl scroll-mt-24 px-5 py-20 sm:px-8">
+  <h2 class="display h-section max-w-2xl" data-reveal>
+    Frequently asked <span class="grad-text">questions</span>
+  </h2>
+
+  <div class="mt-8 max-w-3xl divide-y divide-[var(--color-line)] border-y border-[var(--color-line)]">
+    {faqs.map((faq, i) => (
+      <details class="group py-4" data-reveal>
+        <summary class="faq-q flex items-center justify-between gap-4">
+          <span class="display text-base font-bold">{faq.q}</span>
+          <span class="text-2xl text-[var(--color-faint)] transition group-open:rotate-45">+</span>
+        </summary>
+        <p class="mt-3 text-sm leading-relaxed text-[var(--color-muted)]">{faq.a}</p>
+      </details>
+    ))}
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="mx-auto max-w-7xl px-5 pb-20 sm:px-8">
+  <div class="overflow-hidden rounded-2xl bg-[var(--color-ink)] p-12 text-center text-white" data-reveal>
+    <h2 class="display h-section">Ready to sell your scrap?</h2>
+    <p class="mx-auto mt-4 max-w-md text-sm text-white/60">
+      Describe your scrap in 30 seconds. A verified yard contacts you — free, no obligation.
+    </p>
+    <a href="/submit/" class="btn btn-accent mt-8">Sell your scrap now <span class="arrow">→</span></a>
+  </div>
+</section>
+
+</Layout>

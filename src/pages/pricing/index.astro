@@ -1,0 +1,97 @@
+---
+import Layout from '../../layouts/Layout.astro';
+
+const plans = [
+  {
+    name: 'Starter',
+    price: 0,
+    period: 'free account',
+    desc: 'Create a free account and browse the marketplace.',
+    features: ['Browse all open batches', 'See material, weight, country', 'No monthly fee'],
+    cta: 'Create account',
+    ctaHref: '/become-partner',
+    highlighted: false,
+  },
+  {
+    name: 'Per-lead',
+    price: 299,
+    period: 'per lead / month',
+    desc: 'Pay only for the leads you accept. No monthly commitment.',
+    features: ['All Starter features', 'Accept leads — get contact details', 'Traceable payment & ID check', 'Cancel anytime'],
+    cta: 'Become a partner',
+    ctaHref: '/become-partner',
+    highlighted: true,
+  },
+  {
+    name: 'Volume',
+    price: null,
+    period: 'custom',
+    desc: 'For high-volume yards handling many leads per month.',
+    features: ['All Per-lead features', 'Volume pricing on accepted leads', 'Priority placement', 'Dedicated account manager'],
+    cta: 'Contact us',
+    ctaHref: '/contact/',
+    highlighted: false,
+  },
+];
+---
+
+<Layout
+  title="Pricing — for scrap yards | European Scrap Market"
+  description="Pricing for scrap yards. Free account — pay €299 per lead for contact details. No monthly commitment. Volume pricing available."
+>
+
+<div class="mx-auto max-w-7xl px-5 pt-6 text-sm text-[var(--color-faint)] sm:px-8">
+  <a href="/" class="hover:text-[var(--color-accent)]">Home</a>
+  <span class="mx-2">/</span>
+  <span class="text-[var(--color-ink)]">Pricing</span>
+</div>
+
+<section class="mx-auto max-w-7xl px-5 py-12 sm:px-8">
+  <p class="mono" data-reveal>FOR SCRAP YARDS</p>
+  <h1 class="display h-section mt-3" data-reveal>
+    Simple <span class="grad-text">pricing</span>
+  </h1>
+  <p class="mt-4 max-w-xl text-sm text-[var(--color-muted)]" data-reveal>
+    Create a free account. Pay only for the leads you accept — no monthly commitment.
+  </p>
+
+  <div class="mt-12 grid gap-6 lg:grid-cols-3">
+    {plans.map(plan => (
+      <div class={`rounded-2xl border p-8 ${plan.highlighted ? 'border-[var(--color-accent)] bg-white shadow-xl' : 'border-[var(--color-line)] bg-white'}`} data-reveal>
+        {plan.highlighted && (
+          <span class="mono mb-4 inline-block rounded-full bg-[var(--color-accent)] px-3 py-1 text-white">MOST POPULAR</span>
+        )}
+        <h2 class="display text-xl font-bold">{plan.name}</h2>
+        <p class="mt-2 text-sm text-[var(--color-muted)]">{plan.desc}</p>
+        <p class="mt-4">
+          {plan.price !== null ? (
+            <span class="display text-4xl font-bold">€{plan.price}</span>
+          ) : (
+            <span class="display text-4xl font-bold">Custom</span>
+          )}
+          <span class="text-sm text-[var(--color-faint)]"> {plan.period}</span>
+        </p>
+        <ul class="mt-6 space-y-2">
+          {plan.features.map(f => (
+            <li class="flex items-start gap-2 text-sm">
+              <span class="mt-0.5 text-[var(--color-accent)]">✓</span>
+              <span class="text-[var(--color-muted)]">{f}</span>
+            </li>
+          ))}
+        </ul>
+        <a href={plan.ctaHref} class={`btn mt-8 w-full justify-center ${plan.highlighted ? 'btn-accent' : 'btn-ghost'}`}>
+          {plan.cta} <span class="arrow">→</span>
+        </a>
+      </div>
+    ))}
+  </div>
+
+  <div class="mt-12 rounded-xl border border-[var(--color-line)] bg-[var(--color-bg)] p-6 text-sm text-[var(--color-muted)]" data-reveal>
+    <p class="mono mb-2">HOW IT WORKS</p>
+    <p>All leads are free to view. You only pay €299 when you accept a lead and unlock the seller's contact details.
+    If a lead turns out to be invalid or unreachable, contact our support within 48 hours for a credit.
+    There is no monthly subscription — you only pay for what you use.</p>
+  </div>
+</section>
+
+</Layout>

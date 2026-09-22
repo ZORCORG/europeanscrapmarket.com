@@ -1,0 +1,69 @@
+---
+import Layout from '../../layouts/Layout.astro';
+
+const pillars = [
+  { title: 'Verified yards', desc: 'Every yard is checked before it can accept requests: company registration, tax status, and environmental permits are verified. We review applications manually — normally within one business day.' },
+  { title: 'Traceable payment', desc: 'No cash. Yards commit to traceable payment methods — bank transfer or documented settlement. This protects both sellers and yards.' },
+  { title: 'ID verification', desc: 'Yards verify the identity of sellers at pickup. For high-value batches, both parties exchange documented proof of transaction.' },
+  { title: 'Documented transactions', desc: 'Yards provide settlement notes and correct waste documentation. For industrial and commercial sellers, this includes waste transfer notes and certificates of disposal.' },
+  { title: 'One yard at a time', desc: 'Your request goes to one yard — never several at once and never public. Only the yard that accepts your case sees your contact details. You decide whether to do business.' },
+  { title: 'No obligation', desc: 'You are never locked in. If the price, yard, or arrangement does not suit you, simply decline. The case passes to another yard if you are not helped.' },
+];
+---
+
+<Layout
+  title="Trust & verification | European Scrap Market"
+  description="How European Scrap Market verifies scrap yards and protects sellers. Verified yards, traceable payment, ID checks, documented transactions, and no obligation."
+>
+
+<div class="mx-auto max-w-7xl px-5 pt-6 text-sm text-[var(--color-faint)] sm:px-8">
+  <a href="/" class="hover:text-[var(--color-accent)]">Home</a>
+  <span class="mx-2">/</span>
+  <span class="text-[var(--color-ink)]">Trust</span>
+</div>
+
+<section class="relative overflow-hidden">
+  <div class="aura"></div>
+  <div class="mx-auto max-w-7xl px-5 py-14 sm:px-8">
+    <p class="mono" data-reveal>SAFETY & VERIFICATION</p>
+    <h1 class="display h-section mt-4" data-reveal>
+      Trust & <span class="grad-text">verification</span>
+    </h1>
+    <p class="mt-6 max-w-xl text-lg leading-relaxed text-[var(--color-muted)]" data-reveal>
+      Every yard on European Scrap Market is verified before it can accept requests.
+      Here is how we keep scrap trading safe for sellers and yards alike.
+    </p>
+  </div>
+</section>
+
+<section class="mx-auto max-w-7xl px-5 py-12 sm:px-8">
+  <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+    {pillars.map(p => (
+      <div class="rounded-xl border border-[var(--color-line)] bg-white p-6" data-reveal>
+        <h2 class="display text-lg font-bold">{p.title}</h2>
+        <p class="mt-2 text-sm leading-relaxed text-[var(--color-muted)]">{p.desc}</p>
+      </div>
+    ))}
+  </div>
+</section>
+
+<section class="border-t border-[var(--color-line)] bg-white">
+  <div class="mx-auto max-w-7xl px-5 py-16 sm:px-8">
+    <h2 class="display h-section max-w-xl" data-reveal>How yards become verified</h2>
+    <ol class="mt-8 space-y-6">
+      {[
+        'Yard applies in the portal with company details, environmental permit, and waste transport registration.',
+        'We verify company registration, tax status, and permits — manually, not automatically.',
+        'Yard accepts the network safety commitments: traceable payment, ID checks, documented transactions.',
+        'Account activated — normally within one business day.',
+      ].map((step, i) => (
+        <li class="flex gap-4" data-reveal>
+          <span class="display flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--color-ink)] text-sm font-bold text-white">{i + 1}</span>
+          <span class="pt-1 text-sm text-[var(--color-muted)]">{step}</span>
+        </li>
+      ))}
+    </ol>
+  </div>
+</section>
+
+</Layout>

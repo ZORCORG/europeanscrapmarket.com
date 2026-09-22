@@ -1,0 +1,126 @@
+---
+import { countries } from '../data/countries';
+
+// Major markets get highlighted in the dropdown
+const majorMarkets = ['germany', 'france', 'italy', 'spain', 'poland', 'netherlands', 'united-kingdom', 'sweden'];
+const major = countries.filter(c => majorMarkets.includes(c.slug));
+const rest = countries.filter(c => !majorMarkets.includes(c.slug));
+---
+
+<!-- Top bar -->
+<div class="relative z-50 bg-[var(--color-ink)] text-white">
+  <div class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-1.5 text-[0.72rem] font-medium sm:px-8">
+    <span class="truncate text-white/70">Free for sellers · Verified scrap yards across Europe</span>
+    <div class="flex shrink-0 items-center gap-4">
+      <!-- Country selector dropdown -->
+      <div class="group relative hidden sm:block">
+        <button type="button" class="flex items-center gap-1 text-white/70 hover:text-white">
+          Select country <span class="text-[0.55rem] transition group-hover:rotate-180">▼</span>
+        </button>
+        <div class="invisible absolute right-0 top-full z-50 pt-2 opacity-0 transition-all duration-150 group-hover:visible group-hover:opacity-100">
+          <div class="w-[min(40rem,92vw)] border border-[var(--color-line-strong)] bg-white p-6 shadow-2xl">
+            <p class="mono mb-3">SELECT COUNTRY — SELL SCRAP IN YOUR MARKET</p>
+            <input id="country-search" class="mb-4 w-full border border-[var(--color-line-strong)] bg-white px-3 py-2 text-sm outline-none focus:border-[var(--color-accent)]" placeholder="Search country…" autocomplete="off" />
+            <div class="max-h-[55vh] space-y-4 overflow-y-auto pr-1">
+              <div>
+                <p class="mono mb-1.5 text-xs text-[var(--color-faint)]">MAJOR MARKETS</p>
+                <div class="flex flex-wrap gap-1.5">
+                  {major.map(c => (
+                    <a href={`/sell-scrap/${c.slug}/`} class="ort-chip" data-namn={c.name.toLowerCase()}>{c.name}</a>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <p class="mono mb-1.5 text-xs text-[var(--color-faint)]">ALL COUNTRIES ({countries.length})</p>
+                <div class="flex flex-wrap gap-1.5">
+                  {rest.map(c => (
+                    <a href={`/sell-scrap/${c.slug}/`} class="ort-chip" data-namn={c.name.toLowerCase()}>{c.name}</a>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <a href="/sell-scrap/" class="mt-4 block border-t border-[var(--color-line)] pt-3 text-sm font-bold text-[var(--color-accent)]">All {countries.length} countries →</a>
+          </div>
+        </div>
+      </div>
+      <a href="/scrap-prices/" class="font-semibold text-[var(--color-accent)] hover:underline">Today's scrap prices →</a>
+      <a href="/trust/" class="hidden text-white/70 hover:text-white sm:block">Trust & verification</a>
+    </div>
+  </div>
+</div>
+
+<!-- Main header -->
+<header class="sticky top-0 z-40 border-b border-[var(--color-line)] bg-[var(--color-bg)]/65 backdrop-blur-xl relative">
+  <div class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-3 sm:px-8">
+    <a href="/" class="flex items-center" aria-label="European Scrap Market — home">
+      <span class="display text-xl font-bold text-[var(--color-ink)]">
+        European<span class="text-[var(--color-accent)]">Scrap</span>Market
+      </span>
+    </a>
+
+    <nav class="hidden items-center gap-1 lg:flex" aria-label="Main menu">
+      <a href="/marketplace/" class="navlink">Marketplace</a>
+      <a href="/scrap-classes/" class="navlink">Scrap Classes</a>
+      <a href="/scrap-prices/" class="navlink navlink-accent">Scrap Prices</a>
+      <a href="/pricing/" class="navlink">Pricing</a>
+
+      <!-- Platform mega menu -->
+      <div class="group">
+        <a href="/#how-it-works" class="navlink flex items-center gap-1.5">
+          Platform <span class="text-[0.6rem] transition group-hover:rotate-180">▼</span>
+        </a>
+        <div class="invisible absolute inset-x-0 top-full z-50 opacity-0 transition-all duration-150 group-hover:visible group-hover:opacity-100">
+          <div class="border-b border-[var(--color-line-strong)] bg-white shadow-2xl">
+            <div class="mx-auto grid max-w-7xl grid-cols-[20rem_1fr] px-5 sm:px-8">
+              <div class="p-8">
+                <p class="mono text-[var(--color-faint)]">ONE REQUEST · ONE YARD PICKS IT UP</p>
+                <a href="/#how-it-works" class="display mt-2 block text-lg font-bold hover:text-[var(--color-accent)]">How European Scrap Market works →</a>
+              </div>
+              <div class="grid grid-cols-2 gap-x-16 p-8 lg:gap-x-24">
+                <div>
+                  <p class="mono mb-2">FOR SELLERS</p>
+                  <a href="/marketplace" class="megalink">Marketplace — open batches</a>
+                  <a href="/sell-scrap" class="megalink">Sell scrap — all {countries.length} countries</a>
+                  <a href="/#materials" class="megalink">Materials we trade</a>
+                  <a href="/#how-it-works" class="megalink">How it works</a>
+                  <a href="/#faq" class="megalink">FAQ</a>
+                  <a href="/contact/" class="megalink">Contact us</a>
+                </div>
+                <div>
+                  <p class="mono mb-2">FOR SCRAP YARDS</p>
+                  <a href="/become-partner" class="megalink">Become a partner</a>
+                  <a href="/pricing/" class="megalink">Pricing plans</a>
+                  <a href="/trust" class="megalink">Trust & verification</a>
+                  <a href="/marketplace" class="megalink">Current requests</a>
+                  <a href="/partner-terms" class="megalink">Partner terms</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <a href="/articles/" class="navlink">Knowledge</a>
+    </nav>
+
+    <div class="flex items-center gap-2">
+      <a href="/submit/" class="btn btn-accent text-xs sm:text-sm">Sell your scrap <span class="arrow">→</span></a>
+      <a href="/become-partner" class="btn btn-ink hidden text-xs sm:flex sm:text-sm">For yards</a>
+    </div>
+  </div>
+</header>
+
+<!-- Country search script -->
+<script is:inline>
+  (function () {
+    const input = document.getElementById('country-search');
+    if (!input) return;
+    input.addEventListener('input', function () {
+      const q = this.value.toLowerCase().trim();
+      document.querySelectorAll('[data-namn]').forEach(function (el) {
+        const show = !q || el.dataset.namn.includes(q);
+        el.style.display = show ? '' : 'none';
+      });
+    });
+  })();
+</script>

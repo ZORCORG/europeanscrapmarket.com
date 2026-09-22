@@ -1,0 +1,114 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { countries } from '../../data/countries';
+
+const euCountries = countries.filter(c => c.eu);
+const nonEu = countries.filter(c => !c.eu);
+const totalYards = countries.reduce((sum, c) => sum + c.scrapYards, 0);
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: 'Sell scrap in Europe — all countries',
+  description: `Sell metal scrap across ${countries.length} European countries. Describe your scrap — a verified yard picks up the case. Free for sellers.`,
+};
+---
+
+<Layout
+  title="Sell scrap in Europe — all countries | European Scrap Market"
+  description={`Sell metal scrap across ${countries.length} European countries. Describe your scrap — a verified scrap yard in your country picks up the case and contacts you. Free for sellers.`}
+  jsonLd={jsonLd}
+>
+
+<div class="mx-auto max-w-7xl px-5 pt-6 text-sm text-[var(--color-faint)] sm:px-8">
+  <a href="/" class="hover:text-[var(--color-accent)]">Home</a>
+  <span class="mx-2">/</span>
+  <span class="text-[var(--color-ink)]">Sell scrap</span>
+</div>
+
+<section class="relative overflow-hidden">
+  <div class="aura"></div>
+  <div class="mx-auto max-w-7xl px-5 py-14 sm:px-8">
+    <p class="mono" data-reveal>{countries.length} COUNTRIES · {totalYards.toLocaleString('en')} VERIFIED YARDS</p>
+    <h1 class="display h-hero mt-4" data-reveal>
+      Sell scrap in <span class="grad-text">Europe</span>
+    </h1>
+    <p class="mt-6 max-w-xl text-lg leading-relaxed text-[var(--color-muted)]" data-reveal>
+      {countries.length} country pages with local scrap market information. Find a verified yard in your country — free for sellers, no obligation.
+    </p>
+    <div class="mt-8" data-reveal>
+      <a href="/submit/" class="btn btn-accent">Sell your scrap <span class="arrow">→</span></a>
+    </div>
+  </div>
+</section>
+
+<section class="mx-auto max-w-7xl px-5 py-8 sm:px-8">
+  <input
+    id="country-search-full"
+    class="w-full max-w-md border border-[var(--color-line-strong)] bg-white px-4 py-3 text-sm outline-none focus:border-[var(--color-accent)]"
+    placeholder="Search countries…"
+    autocomplete="off"
+  />
+</section>
+
+<section class="mx-auto max-w-7xl px-5 py-8 sm:px-8">
+  <h2 class="display text-lg font-bold" data-reveal>EU member states ({euCountries.length})</h2>
+  <div class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    {euCountries.map(c => (
+      <a href={`/sell-scrap/${c.slug}/`} class="tcard p-5" data-reveal>
+        <div class="flex items-center justify-between">
+          <h3 class="display text-base font-bold">{c.name}</h3>
+          <span class="mono text-[var(--color-faint)]">{c.currency}</span>
+        </div>
+        <p class="mt-2 text-xs text-[var(--color-muted)]">{c.localNote}</p>
+        <div class="mt-3 flex flex-wrap gap-1.5">
+          {c.keyMetals.map(m => (
+            <span class="rounded border border-[var(--color-line)] px-2 py-0.5 text-[0.65rem] text-[var(--color-muted)]">{m}</span>
+          ))}
+        </div>
+        <p class="mt-3 text-sm font-bold text-[var(--color-accent)]">Sell scrap in {c.name} →</p>
+      </a>
+    ))}
+  </div>
+</section>
+
+<section class="mx-auto max-w-7xl px-5 py-8 sm:px-8">
+  <h2 class="display text-lg font-bold" data-reveal>Other European markets ({nonEu.length})</h2>
+  <div class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    {nonEu.map(c => (
+      <a href={`/sell-scrap/${c.slug}/`} class="tcard p-5" data-reveal>
+        <div class="flex items-center justify-between">
+          <h3 class="display text-base font-bold">{c.name}</h3>
+          <span class="mono text-[var(--color-faint)]">{c.currency}</span>
+        </div>
+        <p class="mt-2 text-xs text-[var(--color-muted)]">{c.localNote}</p>
+        <div class="mt-3 flex flex-wrap gap-1.5">
+          {c.keyMetals.map(m => (
+            <span class="rounded border border-[var(--color-line)] px-2 py-0.5 text-[0.65rem] text-[var(--color-muted)]">{m}</span>
+          ))}
+        </div>
+        <p class="mt-3 text-sm font-bold text-[var(--color-accent)]">Sell scrap in {c.name} →</p>
+      </a>
+    ))}
+  </div>
+</section>
+
+<script is:inline>
+  (function () {
+    const input = document.getElementById('country-search-full');
+    if (!input) return;
+    input.addEventListener('input', function () {
+      const q = this.value.toLowerCase().trim();
+      document.querySelectorAll('section a[href*="/sell-scrap/"]').forEach(function (el) {
+        const text = el.textContent.toLowerCase();
+        const show = !q || text.includes(q);
+        const card = el.closest('.tcard') || el;
+        if (card.classList.contains('tcard')) {
+          card.style.display = show ? '' : 'none';
+        }
+      });
+    });
+  })();
+</script>
+
+</Layout>

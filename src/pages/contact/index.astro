@@ -1,0 +1,70 @@
+---
+import Layout from '../../layouts/Layout.astro';
+---
+
+<Layout
+  title="Contact us | European Scrap Market"
+  description="Contact European Scrap Market. Questions about selling scrap, becoming a partner, or advertising. We reply within one business day."
+>
+
+<div class="mx-auto max-w-7xl px-5 pt-6 text-sm text-[var(--color-faint)] sm:px-8">
+  <a href="/" class="hover:text-[var(--color-accent)]">Home</a>
+  <span class="mx-2">/</span>
+  <span class="text-[var(--color-ink)]">Contact</span>
+</div>
+
+<section class="mx-auto max-w-3xl px-5 py-12 sm:px-8">
+  <p class="mono" data-reveal>GET IN TOUCH</p>
+  <h1 class="display h-section mt-3" data-reveal>Contact <span class="grad-text">us</span></h1>
+  <p class="mt-4 text-sm text-[var(--color-muted)]" data-reveal>
+    Questions about selling scrap, becoming a partner, or advertising? We reply within one business day.
+  </p>
+
+  <form class="mt-10 space-y-6" data-reveal>
+    <div class="grid gap-4 sm:grid-cols-2">
+      <div>
+        <label class="display block text-sm font-bold">Name</label>
+        <input type="text" required class="mt-2 w-full rounded-lg border border-[var(--color-line-strong)] bg-white px-4 py-3 text-sm outline-none focus:border-[var(--color-accent)]" />
+      </div>
+      <div>
+        <label class="display block text-sm font-bold">Email</label>
+        <input type="email" required class="mt-2 w-full rounded-lg border border-[var(--color-line-strong)] bg-white px-4 py-3 text-sm outline-none focus:border-[var(--color-accent)]" />
+      </div>
+    </div>
+    <div>
+      <label class="display block text-sm font-bold">Subject</label>
+      <select class="mt-2 w-full rounded-lg border border-[var(--color-line-strong)] bg-white px-4 py-3 text-sm outline-none focus:border-[var(--color-accent)]">
+        <option>General question</option>
+        <option>Selling scrap</option>
+        <option>Becoming a partner</option>
+        <option>Advertising</option>
+        <option>Press</option>
+      </select>
+    </div>
+    <div>
+      <label class="display block text-sm font-bold">Message</label>
+      <textarea rows="5" required class="mt-2 w-full rounded-lg border border-[var(--color-line-strong)] bg-white px-4 py-3 text-sm outline-none focus:border-[var(--color-accent)]"></textarea>
+    </div>
+    <button type="button" class="btn btn-accent" onclick="this.nextElementSibling.classList.remove('hidden');this.classList.add('hidden')">
+      Send message →
+    </button>
+    <p class="hidden text-sm font-semibold text-green-700">Message sent! We will reply within one business day. (Demo form — no data has been sent.)</p>
+  </form>
+
+  <div class="mt-12 grid gap-6 sm:grid-cols-3" data-reveal>
+    <div class="rounded-xl border border-[var(--color-line)] bg-white p-6">
+      <p class="mono text-[var(--color-faint)]">EMAIL</p>
+      <p class="mt-2 text-sm font-semibold">support@europeanscrapmarket.com</p>
+    </div>
+    <div class="rounded-xl border border-[var(--color-line)] bg-white p-6">
+      <p class="mono text-[var(--color-faint)]">PARTNERS</p>
+      <p class="mt-2 text-sm font-semibold">partners@europeanscrapmarket.com</p>
+    </div>
+    <div class="rounded-xl border border-[var(--color-line)] bg-white p-6">
+      <p class="mono text-[var(--color-faint)]">AREA</p>
+      <p class="mt-2 text-sm font-semibold">Europe — 30+ countries</p>
+    </div>
+  </div>
+</section>
+
+</Layout>
