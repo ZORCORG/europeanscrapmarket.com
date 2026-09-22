@@ -5,14 +5,15 @@ const title = 'Sign in | European Scrap Market';
 const description = 'Sign in to European Scrap Market with a magic link sent to your email. No password required.';
 ---
 
-<Layout {title} {description}>
+<Layout {title} {description} noindex={true}>
   <section class="mx-auto max-w-md px-5 py-20">
     <div class="text-center">
       <h1 class="font-display text-3xl font-bold text-[var(--color-ink)]">Sign in</h1>
       <p class="mt-2 text-sm text-[var(--color-faint)]">Enter your email and we'll send you a secure sign-in link.</p>
     </div>
 
-    <form id="login-form" class="mt-8 space-y-4">
+    <!-- Magic link (primary) -->
+    <form id="magic-form" class="mt-8 space-y-4">
       <div>
         <label for="email" class="mono mb-1.5 block text-xs text-[var(--color-faint)]">EMAIL</label>
         <input
@@ -25,28 +26,61 @@ const description = 'Sign in to European Scrap Market with a magic link sent to 
           class="w-full border border-[var(--color-line-strong)] bg-white px-3 py-2.5 text-sm outline-none focus:border-[var(--color-accent)]"
         />
       </div>
-
       <button type="submit" class="btn btn-primary w-full">Send sign-in link</button>
     </form>
 
+    <div class="mt-6 flex items-center gap-3">
+      <hr class="flex-1 border-[var(--color-line)]" />
+      <span class="mono text-xs text-[var(--color-faint)]">OR</span>
+      <hr class="flex-1 border-[var(--color-line)]" />
+    </div>
+
+    <!-- Email + password (alternative) -->
+    <form id="password-form" class="mt-6 space-y-4">
+      <div>
+        <label for="pw-email" class="mono mb-1.5 block text-xs text-[var(--color-faint)]">EMAIL</label>
+        <input type="email" id="pw-email" required autocomplete="email" placeholder="you@company.com"
+          class="w-full border border-[var(--color-line-strong)] bg-white px-3 py-2.5 text-sm outline-none focus:border-[var(--color-accent)]" />
+      </div>
+      <div>
+        <label for="pw-password" class="mono mb-1.5 block text-xs text-[var(--color-faint)]">PASSWORD</label>
+        <input type="password" id="pw-password" required autocomplete="current-password" placeholder="••••••••"
+          class="w-full border border-[var(--color-line-strong)] bg-white px-3 py-2.5 text-sm outline-none focus:border-[var(--color-accent)]" />
+      </div>
+      <div class="flex gap-3">
+        <button type="submit" id="sign-in-btn" class="btn btn-primary flex-1">Sign in</button>
+        <button type="button" id="sign-up-btn" class="btn btn-secondary flex-1">Create account</button>
+      </div>
+    </form>
+
     <div id="status" class="mt-6 hidden rounded-sm border p-4 text-sm"></div>
-    <div id="dev-link" class="mt-4 hidden"></div>
 
     <p class="mt-8 text-center text-xs text-[var(--color-faint)]">
-      No password needed — we use magic links for secure, passwordless authentication.
+      Magic links are passwordless — just click the link in your email. You can also use a password if you prefer.
     </p>
   </section>
 </Layout>
 
 <script>
-  const form = document.getElementById('login-form') as HTMLFormElement;
-  const status = document.getElementById('status')!;
-  const devLink = document.getElementById('dev-link')!;
+  const magicForm = document.getElementById('magic-form') as HTMLFormElement;
+  const passwordForm = document.getElementById('password-form') as HTMLFormElement;
+  const statusEl = document.getElementById('status')!;
 
-  form.addEventListener('submit', async (e) => {
+  function showStatus(msg: string, ok: boolean) {
+    statusEl.classList.remove('hidden');
+    if (ok) {
+      statusEl.className = 'mt-6 rounded-sm border border-green-300 bg-green-50 p-4 text-sm text-green-700';
+    } else {
+      statusEl.className = 'mt-6 rounded-sm border border-red-300 bg-red-50 p-4 text-sm text-red-700';
+    }
+    statusEl.textContent = msg;
+  }
+
+  // Magic link
+  magicForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = (document.getElementById('email') as HTMLInputElement).value;
-    const btn = form.querySelector('button') as HTMLButtonElement;
+    const btn = magicForm.querySelector('button') as HTMLButtonElement;
     btn.disabled = true;
     btn.textContent = 'Sending…';
 
@@ -54,38 +88,53 @@ const description = 'Sign in to European Scrap Market with a magic link sent to 
       const res = await fetch('/api/auth/sign-in/magic-link', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, callbackURL: '/account' }),
       });
       const data = await res.json();
-
-      status.classList.remove('hidden');
-      if (data.error) {
-        status.className = 'mt-6 rounded-sm border border-red-300 bg-red-50 p-4 text-sm text-red-700';
-        status.textContent = data.error;
-        btn.disabled = false;
-        btn.textContent = 'Send sign-in link';
+      if (data.status || data.ok) {
+        showStatus('Check your email for a sign-in link. It expires in 15 minutes.', true);
       } else {
-        status.className = 'mt-6 rounded-sm border border-green-300 bg-green-50 p-4 text-sm text-green-700';
-        status.textContent = data.message || 'Check your email for a sign-in link.';
-
-        // Dev mode: show the link directly
-        if (data.devLink) {
-          devLink.classList.remove('hidden');
-          devLink.innerHTML = `<div class="rounded-sm border border-[var(--color-line-strong)] bg-[var(--color-bg)] p-4 text-sm">
-            <p class="mono mb-2 text-xs text-[var(--color-faint)]">DEVELOPMENT MODE — NO EMAIL SENT</p>
-            <p class="mb-2">Click the link below to sign in:</p>
-            <a href="${data.devLink}" class="btn btn-primary">Sign in now</a>
-          </div>`;
-        }
-        btn.disabled = false;
-        btn.textContent = 'Send sign-in link';
+        showStatus(data.message || data.error || 'Something went wrong.', false);
       }
     } catch {
-      status.classList.remove('hidden');
-      status.className = 'mt-6 rounded-sm border border-red-300 bg-red-50 p-4 text-sm text-red-700';
-      status.textContent = 'Something went wrong. Please try again.';
-      btn.disabled = false;
-      btn.textContent = 'Send sign-in link';
+      showStatus('Network error. Please try again.', false);
     }
+    btn.disabled = false;
+    btn.textContent = 'Send sign-in link';
   });
+
+  // Email + password (sign in or sign up)
+  const signInBtn = document.getElementById('sign-in-btn')!;
+  const signUpBtn = document.getElementById('sign-up-btn')!;
+
+  async function submitPassword(endpoint: string) {
+    const email = (document.getElementById('pw-email') as HTMLInputElement).value;
+    const password = (document.getElementById('pw-password') as HTMLInputElement).value;
+    if (!email || !password) return showStatus('Email and password are required.', false);
+    if (password.length < 8) return showStatus('Password must be at least 8 characters.', false);
+
+    signInBtn.disabled = true;
+    signInBtn.textContent = 'Signing in…';
+
+    try {
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, name: email.split('@')[0] }),
+      });
+      const data = await res.json();
+      if (data.status || data.ok || (data.token && data.user)) {
+        window.location.href = '/account';
+      } else {
+        showStatus(data.message || data.error || 'Authentication failed.', false);
+      }
+    } catch {
+      showStatus('Network error. Please try again.', false);
+    }
+    signInBtn.disabled = false;
+    signInBtn.textContent = 'Sign in';
+  }
+
+  signInBtn.addEventListener('click', () => submitPassword('/api/auth/sign-in/email'));
+  signUpBtn.addEventListener('click', () => submitPassword('/api/auth/sign-up/email'));
 </script>

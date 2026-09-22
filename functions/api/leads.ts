@@ -1,7 +1,8 @@
 // API: POST /api/leads — create a new scrap submission (lead)
 // API: GET  /api/leads — list leads (admin only)
 
-import { getUser, json, handleCORS } from '../_lib/auth';
+import { getSessionUser } from '../../src/lib/auth';
+import { json, handleCORS } from '../_lib/utils';
 
 export const onRequestPost: PagesFunction = async (context) => {
   const cors = handleCORS(context.request);
@@ -9,6 +10,8 @@ export const onRequestPost: PagesFunction = async (context) => {
 
   const env = context.env as Record<string, unknown>;
   const db = env.DB as D1Database;
+  const secret = env.AUTH_SECRET as string;
+  const siteUrl = (env.SITE_URL as string) || 'https://europeanscrapmarket.com';
 
   let body: Record<string, unknown>;
   try {
@@ -24,7 +27,7 @@ export const onRequestPost: PagesFunction = async (context) => {
   if (!name || !email || !country) return json({ error: 'name, email, and country are required' }, 400);
   if (!/^[^@]+@[^@]+\.[^@]+$/.test(email)) return json({ error: 'Valid email is required' }, 400);
 
-  const user = await getUser(context.request, env);
+  const user = await getSessionUser(db, secret, siteUrl, context.request);
 
   await db.prepare(
     `INSERT INTO leads (user_id, name, email, phone, country, city, scrap_class, weight_kg, description, photos_count)
@@ -50,7 +53,9 @@ export const onRequestGet: PagesFunction = async (context) => {
 
   const env = context.env as Record<string, unknown>;
   const db = env.DB as D1Database;
-  const user = await getUser(context.request, env);
+  const secret = env.AUTH_SECRET as string;
+  const siteUrl = (env.SITE_URL as string) || 'https://europeanscrapmarket.com';
+  const user = await getSessionUser(db, secret, siteUrl, context.request);
   if (!user || user.role !== 'admin') return json({ error: 'Admin access required' }, 403);
 
   const url = new URL(context.request.url);

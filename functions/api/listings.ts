@@ -1,7 +1,8 @@
 // API: GET  /api/listings — public list of active marketplace listings
 // API: POST /api/listings — create a listing (authenticated)
 
-import { getUser, json, handleCORS } from '../_lib/auth';
+import { getSessionUser } from '../../src/lib/auth';
+import { json, handleCORS } from '../_lib/utils';
 
 export const onRequestGet: PagesFunction = async (context) => {
   const cors = handleCORS(context.request);
@@ -30,7 +31,9 @@ export const onRequestPost: PagesFunction = async (context) => {
 
   const env = context.env as Record<string, unknown>;
   const db = env.DB as D1Database;
-  const user = await getUser(context.request, env);
+  const secret = env.AUTH_SECRET as string;
+  const siteUrl = (env.SITE_URL as string) || 'https://europeanscrapmarket.com';
+  const user = await getSessionUser(db, secret, siteUrl, context.request);
   if (!user) return json({ error: 'You must be signed in to create a listing' }, 401);
 
   let body: Record<string, unknown>;

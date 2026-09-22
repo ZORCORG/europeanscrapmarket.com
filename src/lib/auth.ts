@@ -1,56 +1,110 @@
-// Client-side auth utilities
+// Better Auth server instance — created per request from env bindings.
+// Used by the catch-all handler at functions/api/auth/[...path].ts
+// and by other API endpoints that need session validation.
 
-export interface SessionUser {
-  id: string;
-  email: string;
-  name: string;
-  role: 'buyer' | 'partner' | 'admin';
+import { betterAuth } from 'better-auth';
+
+export interface CreateAuthOpts {
+  db: D1Database;
+  secret: string;
+  siteUrl: string;
+  emailWorkerUrl: string;
+  emailWorkerKey: string;
 }
 
-/** Check if the user is logged in. Returns the user or null. */
-export async function getSession(): Promise<SessionUser | null> {
-  try {
-    const res = await fetch('/api/auth/session');
-    if (!res.ok) return null;
-    const data = await res.json();
-    return data.user ?? null;
-  } catch {
-    return null;
-  }
-}
-
-/** Require authentication — redirect to /login if not signed in. */
-export async function requireAuth(): Promise<SessionUser> {
-  const user = await getSession();
-  if (!user) {
-    window.location.href = '/login?redirect=' + encodeURIComponent(window.location.pathname);
-    throw new Error('Not authenticated');
-  }
-  return user;
-}
-
-/** Require admin role — redirect to /account if not admin. */
-export async function requireAdmin(): Promise<SessionUser> {
-  const user = await requireAuth();
-  if (user.role !== 'admin') {
-    window.location.href = '/account';
-    throw new Error('Admin access required');
-  }
-  return user;
-}
-
-/** Sign out the current user. */
-export async function signOut(): Promise<void> {
-  await fetch('/api/auth/sign-out', { method: 'POST' });
-  window.location.href = '/';
-}
-
-/** Request a magic link for the given email. */
-export async function requestMagicLink(email: string): Promise<{ ok: boolean; error?: string; devLink?: string }> {
-  const res = await fetch('/api/auth/sign-in/magic-link', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email }),
+export function createAuth(opts: CreateAuthOpts) {
+  return betterAuth({
+    // Better Auth's Kysely adapter auto-detects D1 (has batch/exec/prepare)
+    // and creates a D1SqliteDialect internally — no extra deps needed.
+    database: opts.db,
+    secret: opts.secret,
+    baseURL: `${opts.siteUrl}/api/auth`,
+    trustedOrigins: [opts.siteUrl, 'https://europeanscrapmarket.pages.dev'],
+    emailAndPassword: {
+      enabled: true,
+      minPasswordLength: 8,
+      requireEmailVerification: false,
+    },
+    magicLink: {
+      enabled: true,
+      sendMagicLink: async ({ email, url }) => {
+        const html = [
+          `<p>Click <a href="${url}">here</a> to sign in to European Scrap Market.</p>`,
+          `<p>This link expires in 15 minutes. If you did not request it, ignore this email.</p>`,
+          `<p style="color:#999;font-size:12px;margin-top:24px">European Scrap Market — europeanscrapmarket.com</p>`,
+        ].join('');
+        try {
+          await fetch(opts.emailWorkerUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Email-Worker-Key': opts.emailWorkerKey,
+            },
+            body: JSON.stringify({
+              to: email,
+              subject: 'Your sign-in link — European Scrap Market',
+              html,
+            }),
+          });
+        } catch (err) {
+          console.error('Email worker call failed:', err);
+        }
+      },
+    },
+    user: {
+      additionalFields: {
+        role: {
+          type: 'string',
+          required: false,
+          defaultValue: 'buyer',
+          input: false,
+        },
+        company: {
+          type: 'string',
+          required: false,
+          input: true,
+        },
+        phone: {
+          type: 'string',
+          required: false,
+          input: true,
+        },
+        country: {
+          type: 'string',
+          required: false,
+          input: true,
+        },
+        status: {
+          type: 'string',
+          required: false,
+          defaultValue: 'active',
+          input: false,
+        },
+      },
+    },
   });
-  return res.json();
+}
+
+/** Helper to get the authenticated user from a request, or null. */
+export async function getSessionUser(
+  db: D1Database,
+  secret: string,
+  siteUrl: string,
+  request: Request,
+): Promise<{ id: string; email: string; name: string; role: string } | null> {
+  const auth = createAuth({
+    db,
+    secret,
+    siteUrl,
+    emailWorkerUrl: '',
+    emailWorkerKey: '',
+  });
+  const session = await auth.api.getSession({ headers: request.headers });
+  if (!session) return null;
+  return {
+    id: session.user.id,
+    email: session.user.email,
+    name: session.user.name,
+    role: (session.user as Record<string, unknown>).role as string,
+  };
 }

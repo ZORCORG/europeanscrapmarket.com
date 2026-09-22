@@ -1,44 +1,71 @@
--- European Scrap Market — D1 schema
--- Run: npx wrangler d1 execute esm-db --file=src/worker/schema.sql
+-- European Scrap Market — D1 schema (Better Auth + app tables)
+-- Run: npx wrangler d1 execute esm-db --remote --file=src/worker/schema.sql
 
--- Users: sellers, partners (scrap yards), admins
-CREATE TABLE IF NOT EXISTS users (
-  id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+-- ═══════════════════════════════════════════════════════════════
+-- Better Auth core tables
+-- ═══════════════════════════════════════════════════════════════
+
+CREATE TABLE IF NOT EXISTS "user" (
+  id TEXT PRIMARY KEY NOT NULL,
+  name TEXT NOT NULL,
   email TEXT NOT NULL UNIQUE,
-  name TEXT,
-  role TEXT NOT NULL DEFAULT 'buyer' CHECK(role IN ('buyer','partner','admin')),
+  emailVerified INTEGER NOT NULL DEFAULT 0,
+  image TEXT,
+  createdAt TEXT NOT NULL DEFAULT (datetime('now')),
+  updatedAt TEXT NOT NULL DEFAULT (datetime('now')),
+  role TEXT NOT NULL DEFAULT 'buyer',
   company TEXT,
   phone TEXT,
   country TEXT,
-  status TEXT NOT NULL DEFAULT 'active' CHECK(status IN ('active','suspended','pending')),
-  created_at TEXT NOT NULL DEFAULT (datetime('now')),
-  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+  status TEXT NOT NULL DEFAULT 'active'
 );
+CREATE INDEX IF NOT EXISTS idx_user_email ON "user"(email);
 
-CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
-
--- Magic link tokens for passwordless auth
-CREATE TABLE IF NOT EXISTS magic_links (
-  id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
-  email TEXT NOT NULL,
+CREATE TABLE IF NOT EXISTS "session" (
+  id TEXT PRIMARY KEY NOT NULL,
+  expiresAt TEXT NOT NULL,
   token TEXT NOT NULL UNIQUE,
-  expires_at TEXT NOT NULL,
-  used INTEGER NOT NULL DEFAULT 0,
-  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  createdAt TEXT NOT NULL DEFAULT (datetime('now')),
+  updatedAt TEXT NOT NULL DEFAULT (datetime('now')),
+  ipAddress TEXT,
+  userAgent TEXT,
+  userId TEXT NOT NULL,
+  FOREIGN KEY (userId) REFERENCES "user"(id) ON DELETE CASCADE
 );
+CREATE INDEX IF NOT EXISTS idx_session_token ON "session"(token);
+CREATE INDEX IF NOT EXISTS idx_session_userId ON "session"(userId);
 
-CREATE INDEX IF NOT EXISTS idx_magic_token ON magic_links(token);
-
--- Sessions
-CREATE TABLE IF NOT EXISTS sessions (
-  id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
-  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  token_hash TEXT NOT NULL UNIQUE,
-  expires_at TEXT NOT NULL,
-  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+CREATE TABLE IF NOT EXISTS "account" (
+  id TEXT PRIMARY KEY NOT NULL,
+  accountId TEXT NOT NULL,
+  providerId TEXT NOT NULL,
+  userId TEXT NOT NULL,
+  accessToken TEXT,
+  refreshToken TEXT,
+  idToken TEXT,
+  accessTokenExpiresAt TEXT,
+  refreshTokenExpiresAt TEXT,
+  scope TEXT,
+  password TEXT,
+  createdAt TEXT NOT NULL DEFAULT (datetime('now')),
+  updatedAt TEXT NOT NULL DEFAULT (datetime('now')),
+  FOREIGN KEY (userId) REFERENCES "user"(id) ON DELETE CASCADE
 );
+CREATE INDEX IF NOT EXISTS idx_account_userId ON "account"(userId);
 
-CREATE INDEX IF NOT EXISTS idx_sessions_token ON sessions(token_hash);
+CREATE TABLE IF NOT EXISTS "verification" (
+  id TEXT PRIMARY KEY NOT NULL,
+  identifier TEXT NOT NULL,
+  value TEXT NOT NULL,
+  expiresAt TEXT NOT NULL,
+  createdAt TEXT NOT NULL DEFAULT (datetime('now')),
+  updatedAt TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_verification_identifier ON "verification"(identifier);
+
+-- ═══════════════════════════════════════════════════════════════
+-- App tables
+-- ═══════════════════════════════════════════════════════════════
 
 -- Scrap submissions (leads from sellers)
 CREATE TABLE IF NOT EXISTS leads (
@@ -56,7 +83,6 @@ CREATE TABLE IF NOT EXISTS leads (
   status TEXT NOT NULL DEFAULT 'new' CHECK(status IN ('new','contacted','completed','archived')),
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
-
 CREATE INDEX IF NOT EXISTS idx_leads_status ON leads(status);
 CREATE INDEX IF NOT EXISTS idx_leads_country ON leads(country);
 
@@ -76,7 +102,6 @@ CREATE TABLE IF NOT EXISTS partner_applications (
   status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','approved','rejected')),
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
-
 CREATE INDEX IF NOT EXISTS idx_partner_status ON partner_applications(status);
 
 -- Marketplace listings
@@ -94,7 +119,6 @@ CREATE TABLE IF NOT EXISTS listings (
   status TEXT NOT NULL DEFAULT 'active' CHECK(status IN ('active','sold','expired','removed')),
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
-
 CREATE INDEX IF NOT EXISTS idx_listings_status ON listings(status);
 CREATE INDEX IF NOT EXISTS idx_listings_country ON listings(country);
 
@@ -115,5 +139,15 @@ CREATE TABLE IF NOT EXISTS ad_slots (
   ends_at TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
-
 CREATE INDEX IF NOT EXISTS idx_ads_active ON ad_slots(active, placement);
+
+-- Ad click tracking
+CREATE TABLE IF NOT EXISTS ad_clicks (
+  id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+  ad_id TEXT NOT NULL,
+  ip TEXT,
+  user_agent TEXT,
+  country TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_adclicks_ad ON ad_clicks(ad_id);

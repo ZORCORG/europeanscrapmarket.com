@@ -1,6 +1,7 @@
 // API: GET /api/admin/stats — dashboard statistics (admin only)
 
-import { getUser, json, handleCORS } from '../../_lib/auth';
+import { getSessionUser } from '../../../src/lib/auth';
+import { json, handleCORS } from '../../_lib/utils';
 
 export const onRequestGet: PagesFunction = async (context) => {
   const cors = handleCORS(context.request);
@@ -8,7 +9,9 @@ export const onRequestGet: PagesFunction = async (context) => {
 
   const env = context.env as Record<string, unknown>;
   const db = env.DB as D1Database;
-  const user = await getUser(context.request, env);
+  const secret = env.AUTH_SECRET as string;
+  const siteUrl = (env.SITE_URL as string) || 'https://europeanscrapmarket.com';
+  const user = await getSessionUser(db, secret, siteUrl, context.request);
   if (!user || user.role !== 'admin') return json({ error: 'Admin access required' }, 403);
 
   const [totalLeads, newLeads, totalPartners, pendingPartners, totalUsers, activeListings] = await Promise.all([
@@ -16,7 +19,7 @@ export const onRequestGet: PagesFunction = async (context) => {
     db.prepare('SELECT COUNT(*) as c FROM leads WHERE status = \'new\'').first(),
     db.prepare('SELECT COUNT(*) as c FROM partner_applications').first(),
     db.prepare('SELECT COUNT(*) as c FROM partner_applications WHERE status = \'pending\'').first(),
-    db.prepare('SELECT COUNT(*) as c FROM users').first(),
+    db.prepare('SELECT COUNT(*) as c FROM "user"').first(),
     db.prepare('SELECT COUNT(*) as c FROM listings WHERE status = \'active\'').first(),
   ]);
 

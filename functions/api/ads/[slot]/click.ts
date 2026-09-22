@@ -1,6 +1,6 @@
 // API: POST /api/ads/:slot/click — track ad click (increment counter)
 
-import { json, handleCORS } from '../../../_lib/auth';
+import { json, handleCORS } from '../../../_lib/utils';
 
 export const onRequestPost: PagesFunction = async (context) => {
   const cors = handleCORS(context.request);

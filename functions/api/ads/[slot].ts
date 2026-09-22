@@ -1,7 +1,7 @@
 // API: GET /api/ads/:slot — serve an ad for a given slot name
 // Returns the active ad for the slot, or null if none.
 
-import { json, handleCORS } from '../../_lib/auth';
+import { json, handleCORS } from '../../_lib/utils';
 
 export const onRequestGet: PagesFunction = async (context) => {
   const cors = handleCORS(context.request);

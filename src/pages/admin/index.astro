@@ -108,7 +108,7 @@ const description = 'Admin control panel for European Scrap Market.';
 </Layout>
 
 <script>
-  import { getSession, signOut } from '../../lib/auth';
+  import { getSession, signOut } from '../../lib/auth-client';
   import { fetchAdminStats, fetchLeads, updateLeadStatus, fetchPartners, updatePartnerStatus, fetchUsers, updateUser } from '../../lib/api';
 
   const authCheck = document.getElementById('auth-check')!;

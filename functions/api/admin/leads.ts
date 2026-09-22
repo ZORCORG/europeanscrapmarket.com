@@ -1,6 +1,7 @@
 // API: PATCH /api/admin/leads?id=... — update lead status (admin only)
 
-import { getUser, json, handleCORS } from '../../_lib/auth';
+import { getSessionUser } from '../../../src/lib/auth';
+import { json, handleCORS } from '../../_lib/utils';
 
 export const onRequestPatch: PagesFunction = async (context) => {
   const cors = handleCORS(context.request);
@@ -8,7 +9,9 @@ export const onRequestPatch: PagesFunction = async (context) => {
 
   const env = context.env as Record<string, unknown>;
   const db = env.DB as D1Database;
-  const user = await getUser(context.request, env);
+  const secret = env.AUTH_SECRET as string;
+  const siteUrl = (env.SITE_URL as string) || 'https://europeanscrapmarket.com';
+  const user = await getSessionUser(db, secret, siteUrl, context.request);
   if (!user || user.role !== 'admin') return json({ error: 'Admin access required' }, 403);
 
   const url = new URL(context.request.url);
