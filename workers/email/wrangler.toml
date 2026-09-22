@@ -1,0 +1,10 @@
+name = "esm-email-worker"
+main = "src/index.ts"
+compatibility_date = "2025-01-01"
+
+[[send_email]]
+name = "SEND_EMAIL"
+
+[vars]
+# Allowed caller — set to the Pages Function's origin or a shared secret
+# The Pages Function sends this in the X-Email-Worker-Key header
