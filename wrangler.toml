@@ -1,3 +1,12 @@
 name = "europeanscrapmarket"
 compatibility_date = "2025-01-01"
 pages_build_output_dir = "dist"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "esm-db"
+database_id = "placeholder-create-with-wrangler-d1-create"
+
+[vars]
+SITE_URL = "https://europeanscrapmarket.com"
+ADMIN_EMAIL = "admin@europeanscrapmarket.com"

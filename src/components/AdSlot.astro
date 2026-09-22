@@ -1,0 +1,13 @@
+---
+export interface Props {
+  slot: string;
+  placement?: 'nav' | 'sidebar' | 'inline' | 'footer';
+  class?: string;
+}
+
+const { slot, placement = 'inline', class: className = '' } = Astro.props;
+---
+
+<div data-ad-slot={slot} data-ad-placement={placement} class={`ad-slot ${className}`}>
+  <!-- Ad engine fills this via JS -->
+</div>

@@ -1,5 +1,6 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import AdSlot from '../components/AdSlot.astro';
 import { countries, scrapClasses, faqs } from '../data/countries';
 
 const totalYards = countries.reduce((sum, c) => sum + c.scrapYards, 0);
@@ -139,6 +140,11 @@ const featured = countries.filter(c => popularCountries.includes(c.slug));
     </div>
   </div>
 </section>
+
+<!-- Ad slot: inline -->
+<div class="mx-auto max-w-7xl px-5 py-6 sm:px-8">
+  <AdSlot slot="home-inline" placement="inline" />
+</div>
 
 <!-- COUNTRY PAGES -->
 <section class="mx-auto max-w-7xl px-5 py-20 sm:px-8">

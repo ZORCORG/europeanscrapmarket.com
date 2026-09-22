@@ -45,6 +45,9 @@ const rest = countries.filter(c => !majorMarkets.includes(c.slug));
       </div>
       <a href="/scrap-prices/" class="font-semibold text-[var(--color-accent)] hover:underline">Today's scrap prices →</a>
       <a href="/trust/" class="hidden text-white/70 hover:text-white sm:block">Trust & verification</a>
+      <a href="/login" id="header-login" class="hidden text-white/70 hover:text-white">Sign in</a>
+      <a href="/account" id="header-account" class="hidden text-white/70 hover:text-white">Account</a>
+      <button id="header-signout" class="hidden text-white/70 hover:text-white">Sign out</button>
     </div>
   </div>
 </div>
@@ -121,6 +124,36 @@ const rest = countries.filter(c => !majorMarkets.includes(c.slug));
         const show = !q || el.dataset.namn.includes(q);
         el.style.display = show ? '' : 'none';
       });
+    });
+  })();
+</script>
+
+<!-- Auth state in header -->
+<script is:inline>
+  (function () {
+    const login = document.getElementById('header-login');
+    const account = document.getElementById('header-account');
+    const signout = document.getElementById('header-signout');
+    if (!login || !account || !signout) return;
+    fetch('/api/auth/session').then(r => r.json()).then(function (data) {
+      if (data.user) {
+        account.classList.remove('hidden');
+        signout.classList.remove('hidden');
+        account.textContent = data.user.name || data.user.email;
+        if (data.user.role === 'admin') {
+          account.href = '/admin';
+          account.textContent = 'Admin panel';
+        }
+        signout.addEventListener('click', function () {
+          fetch('/api/auth/sign-out', { method: 'POST' }).then(function () {
+            window.location.href = '/';
+          });
+        });
+      } else {
+        login.classList.remove('hidden');
+      }
+    }).catch(function () {
+      login.classList.remove('hidden');
     });
   })();
 </script>

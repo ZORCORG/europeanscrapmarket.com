@@ -88,21 +88,57 @@ const sortedCountries = [...countries].sort((a, b) => a.name.localeCompare(b.nam
       Your request is in the network. A verified yard in your country will pick it up and contact you —
       often the same day. Check your email for a secure login link to track your case.
     </p>
-    <p class="mt-2 text-xs text-green-600">This is a demo form — no data has been sent.</p>
+  </div>
+
+  <div id="error-msg" class="mt-8 hidden rounded-xl border border-red-300 bg-red-50 p-6 text-center">
+    <p class="display text-lg font-bold text-red-800">Something went wrong</p>
+    <p id="error-text" class="mt-2 text-sm text-red-700"></p>
   </div>
 </section>
 
-<script is:inline>
-  (function () {
-    const form = document.getElementById('scrap-form');
-    const success = document.getElementById('success-msg');
-    if (!form) return;
-    form.addEventListener('submit', function (e) {
-      e.preventDefault();
-      form.classList.add('hidden');
-      success.classList.remove('hidden');
-    });
-  })();
+<script>
+  const form = document.getElementById('scrap-form') as HTMLFormElement;
+  const success = document.getElementById('success-msg')!;
+  const errorBox = document.getElementById('error-msg')!;
+  const errorText = document.getElementById('error-text')!;
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = form.querySelector('button[type="submit"]') as HTMLButtonElement;
+    btn.disabled = true;
+    btn.textContent = 'Submitting…';
+
+    const data = {
+      name: (document.getElementById('name') as HTMLInputElement).value,
+      email: (document.getElementById('email') as HTMLInputElement).value,
+      phone: (document.getElementById('phone') as HTMLInputElement).value,
+      country: (document.getElementById('country') as HTMLSelectElement).value,
+      scrapClass: (document.getElementById('material') as HTMLSelectElement).value,
+      weightKg: (document.getElementById('weight') as HTMLInputElement).value,
+      description: (document.getElementById('description') as HTMLTextAreaElement).value || 'No description provided',
+    };
+
+    try {
+      const res = await fetch('/api/leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      const result = await res.json();
+
+      if (res.ok && !result.error) {
+        form.classList.add('hidden');
+        success.classList.remove('hidden');
+      } else {
+        throw new Error(result.error || 'Submission failed');
+      }
+    } catch (err) {
+      errorText.textContent = (err as Error).message || 'Please try again.';
+      errorBox.classList.remove('hidden');
+      btn.disabled = false;
+      btn.textContent = 'Submit — a yard contacts you →';
+    }
+  });
 </script>
 
 </Layout>

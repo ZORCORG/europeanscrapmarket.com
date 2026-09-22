@@ -106,6 +106,9 @@ const allJsonLd = jsonLd ? [orgJsonLd, ...(Array.isArray(jsonLd) ? jsonLd : [jso
   {allJsonLd.map((obj) => (
     <script type="application/ld+json" set:html={JSON.stringify(obj)} />
   ))}
+
+  <!-- Ad engine -->
+  <script src="/js/ads.js" defer></script>
 </head>
 <body>
   <Header />

@@ -1,0 +1,127 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { countries } from '../data/countries';
+
+const title = 'My account | European Scrap Market';
+const description = 'Manage your account, profile and listings.';
+---
+
+<Layout {title} {description} noindex={true}>
+  <div id="auth-check" class="mx-auto max-w-3xl px-5 py-12">
+    <div class="text-center">
+      <div class="inline-block animate-spin h-8 w-8 border-2 border-[var(--color-accent)] border-t-transparent rounded-full"></div>
+      <p class="mt-3 text-sm text-[var(--color-faint)]">Loading your account…</p>
+    </div>
+  </div>
+
+  <div id="account-content" class="hidden mx-auto max-w-3xl px-5 py-12">
+    <div class="flex items-center justify-between">
+      <h1 class="font-display text-2xl font-bold text-[var(--color-ink)]">My account</h1>
+      <button id="signout-btn" class="text-sm text-[var(--color-accent)] hover:underline">Sign out</button>
+    </div>
+
+    <!-- Profile section -->
+    <div class="mt-8 border border-[var(--color-line)] bg-white p-6">
+      <h2 class="mono text-xs text-[var(--color-faint)]">PROFILE</h2>
+      <form id="profile-form" class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div>
+          <label for="name" class="mono mb-1 block text-xs text-[var(--color-faint)]">NAME</label>
+          <input type="text" id="name" class="w-full border border-[var(--color-line-strong)] bg-white px-3 py-2 text-sm outline-none focus:border-[var(--color-accent)]" />
+        </div>
+        <div>
+          <label for="email" class="mono mb-1 block text-xs text-[var(--color-faint)]">EMAIL</label>
+          <input type="email" id="email" disabled class="w-full border border-[var(--color-line)] bg-[var(--color-bg)] px-3 py-2 text-sm text-[var(--color-faint)] outline-none" />
+        </div>
+        <div>
+          <label for="company" class="mono mb-1 block text-xs text-[var(--color-faint)]">COMPANY</label>
+          <input type="text" id="company" class="w-full border border-[var(--color-line-strong)] bg-white px-3 py-2 text-sm outline-none focus:border-[var(--color-accent)]" />
+        </div>
+        <div>
+          <label for="phone" class="mono mb-1 block text-xs text-[var(--color-faint)]">PHONE</label>
+          <input type="tel" id="phone" class="w-full border border-[var(--color-line-strong)] bg-white px-3 py-2 text-sm outline-none focus:border-[var(--color-accent)]" />
+        </div>
+        <div>
+          <label for="country" class="mono mb-1 block text-xs text-[var(--color-faint)]">COUNTRY</label>
+          <select id="country" class="w-full border border-[var(--color-line-strong)] bg-white px-3 py-2 text-sm outline-none focus:border-[var(--color-accent)]">
+            <option value="">Select country…</option>
+            {countries.map(c => <option value={c.slug}>{c.name}</option>)}
+          </select>
+        </div>
+        <div class="sm:col-span-2">
+          <button type="submit" class="btn btn-primary">Save profile</button>
+          <span id="profile-saved" class="ml-3 hidden text-sm text-green-600">Saved!</span>
+        </div>
+      </form>
+    </div>
+
+    <!-- Role-specific sections -->
+    <div id="partner-section" class="mt-6 hidden border border-[var(--color-line)] bg-white p-6">
+      <h2 class="mono text-xs text-[var(--color-faint)]">PARTNER DASHBOARD</h2>
+      <p class="mt-3 text-sm">You are registered as a partner. Your leads and listings appear here.</p>
+      <div id="partner-stats" class="mt-4 grid grid-cols-2 gap-4"></div>
+    </div>
+
+    <div id="admin-section" class="mt-6 hidden border border-[var(--color-accent)] bg-[var(--color-bg)] p-6">
+      <h2 class="mono text-xs text-[var(--color-accent)]">ADMIN ACCESS</h2>
+      <p class="mt-3 text-sm">You have admin privileges.</p>
+      <a href="/admin" class="btn btn-primary mt-4 inline-block">Open admin panel</a>
+    </div>
+  </div>
+</Layout>
+
+<script>
+  import { getSession, signOut } from '../lib/auth';
+
+  const authCheck = document.getElementById('auth-check')!;
+  const content = document.getElementById('account-content')!;
+
+  (async () => {
+    const user = await getSession();
+    if (!user) {
+      window.location.href = '/login?redirect=/account';
+      return;
+    }
+
+    authCheck.classList.add('hidden');
+    content.classList.remove('hidden');
+
+    // Load profile
+    const res = await fetch('/api/account/profile');
+    const data = await res.json();
+    const p = data.profile;
+    (document.getElementById('name') as HTMLInputElement).value = p?.name || '';
+    (document.getElementById('email') as HTMLInputElement).value = p?.email || '';
+    (document.getElementById('company') as HTMLInputElement).value = p?.company || '';
+    (document.getElementById('phone') as HTMLInputElement).value = p?.phone || '';
+    (document.getElementById('country') as HTMLSelectElement).value = p?.country || '';
+
+    // Show role-specific sections
+    if (user.role === 'partner' || user.role === 'admin') {
+      document.getElementById('partner-section')?.classList.remove('hidden');
+    }
+    if (user.role === 'admin') {
+      document.getElementById('admin-section')?.classList.remove('hidden');
+    }
+
+    // Profile save
+    document.getElementById('profile-form')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const saved = document.getElementById('profile-saved')!;
+      await fetch('/api/account/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: (document.getElementById('name') as HTMLInputElement).value,
+          company: (document.getElementById('company') as HTMLInputElement).value,
+          phone: (document.getElementById('phone') as HTMLInputElement).value,
+          country: (document.getElementById('country') as HTMLSelectElement).value,
+        }),
+      });
+      saved.classList.remove('hidden');
+      setTimeout(() => saved.classList.add('hidden'), 2000);
+    });
+
+    // Sign out
+    document.getElementById('signout-btn')?.addEventListener('click', () => signOut());
+  })();
+</script>

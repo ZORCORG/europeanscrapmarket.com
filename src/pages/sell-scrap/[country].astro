@@ -1,5 +1,6 @@
 ---
 import Layout from '../../layouts/Layout.astro';
+import AdSlot from '../../components/AdSlot.astro';
 import { countries } from '../../data/countries';
 
 export function getStaticPaths() {
@@ -125,6 +126,11 @@ const others = countries.filter(c => c.slug !== country.slug).slice(0, 12);
     </div>
   </div>
 </section>
+
+<!-- Ad slot: country sidebar -->
+<div class="mx-auto max-w-7xl px-5 py-4 sm:px-8">
+  <AdSlot slot={`country-${country.slug}`} placement="sidebar" />
+</div>
 
 <!-- CTA -->
 <section class="border-y border-[var(--color-line)] bg-white">

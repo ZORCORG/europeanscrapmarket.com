@@ -5,6 +5,9 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"]
-    }
-  }
+    },
+    "types": ["@cloudflare/workers-types"]
+  },
+  "include": ["src/**/*", "functions/**/*"],
+  "exclude": ["dist", "node_modules"]
 }

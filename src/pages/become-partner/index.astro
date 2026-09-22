@@ -1,5 +1,8 @@
 ---
 import Layout from '../../layouts/Layout.astro';
+import { countries } from '../../data/countries';
+
+const sortedCountries = [...countries].sort((a, b) => a.name.localeCompare(b.name));
 
 const steps = [
   { title: 'Create a free account', desc: 'Sign up with just your email — no password, no long application. You fill in the rest when you want to take your first lead.' },
@@ -34,32 +37,49 @@ const steps = [
         Free account — pay only for the leads you accept.
       </p>
       <div class="mt-8 flex flex-wrap gap-3" data-reveal>
-        <a href="/submit/" class="btn btn-accent">Create free account <span class="arrow">→</span></a>
         <a href="/pricing/" class="btn btn-ghost">See pricing</a>
       </div>
     </div>
     <div class="rounded-2xl border border-[var(--color-line)] bg-white p-8" data-reveal>
       <p class="mono text-[var(--color-faint)]">FREE ACCOUNT · 30 SECONDS</p>
-      <h2 class="display mt-3 text-lg font-bold">Start receiving leads</h2>
-      <form class="mt-4 space-y-4">
-        <div>
-          <label class="display block text-sm font-bold">Email</label>
-          <input type="email" required placeholder="you@yard.com" class="mt-2 w-full rounded-lg border border-[var(--color-line-strong)] bg-white px-4 py-3 text-sm outline-none focus:border-[var(--color-accent)]" />
-        </div>
+      <h2 class="display mt-3 text-lg font-bold">Apply to join</h2>
+      <form id="partner-form" class="mt-4 space-y-4">
         <div>
           <label class="display block text-sm font-bold">Company name</label>
-          <input type="text" required placeholder="Your scrap yard" class="mt-2 w-full rounded-lg border border-[var(--color-line-strong)] bg-white px-4 py-3 text-sm outline-none focus:border-[var(--color-accent)]" />
+          <input id="company-name" type="text" required placeholder="Your scrap yard" class="mt-2 w-full rounded-lg border border-[var(--color-line-strong)] bg-white px-4 py-3 text-sm outline-none focus:border-[var(--color-accent)]" />
+        </div>
+        <div>
+          <label class="display block text-sm font-bold">Contact name</label>
+          <input id="contact-name" type="text" required placeholder="Jane Doe" class="mt-2 w-full rounded-lg border border-[var(--color-line-strong)] bg-white px-4 py-3 text-sm outline-none focus:border-[var(--color-accent)]" />
+        </div>
+        <div class="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label class="display block text-sm font-bold">Email</label>
+            <input id="partner-email" type="email" required placeholder="you@yard.com" class="mt-2 w-full rounded-lg border border-[var(--color-line-strong)] bg-white px-4 py-3 text-sm outline-none focus:border-[var(--color-accent)]" />
+          </div>
+          <div>
+            <label class="display block text-sm font-bold">Phone</label>
+            <input id="partner-phone" type="tel" required placeholder="+49 …" class="mt-2 w-full rounded-lg border border-[var(--color-line-strong)] bg-white px-4 py-3 text-sm outline-none focus:border-[var(--color-accent)]" />
+          </div>
         </div>
         <div>
           <label class="display block text-sm font-bold">Country</label>
-          <input type="text" required placeholder="Germany" class="mt-2 w-full rounded-lg border border-[var(--color-line-strong)] bg-white px-4 py-3 text-sm outline-none focus:border-[var(--color-accent)]" />
+          <select id="partner-country" required class="mt-2 w-full rounded-lg border border-[var(--color-line-strong)] bg-white px-4 py-3 text-sm outline-none focus:border-[var(--color-accent)]">
+            <option value="">Select country…</option>
+            {sortedCountries.map(c => <option value={c.slug}>{c.name}</option>)}
+          </select>
         </div>
-        <button type="button" class="btn btn-accent w-full justify-center" onclick="this.closest('form').nextElementSibling.classList.remove('hidden');this.closest('form').classList.add('hidden');">
-          Continue →
-        </button>
+        <div>
+          <label class="display block text-sm font-bold">Metals you handle (optional)</label>
+          <input id="partner-metals" type="text" placeholder="Copper, aluminium, steel…" class="mt-2 w-full rounded-lg border border-[var(--color-line-strong)] bg-white px-4 py-3 text-sm outline-none focus:border-[var(--color-accent)]" />
+        </div>
+        <button type="submit" class="btn btn-accent w-full justify-center">Submit application <span class="arrow">→</span></button>
       </form>
-      <div class="mt-4 hidden rounded-lg border border-green-300 bg-green-50 p-4 text-sm text-green-700">
-        <strong>Account created!</strong> Check your email for a secure login link. This is a demo form — no data has been sent.
+      <div id="partner-success" class="mt-4 hidden rounded-lg border border-green-300 bg-green-50 p-4 text-sm text-green-700">
+        <strong>Application received!</strong> We will review and contact you within 2 business days.
+      </div>
+      <div id="partner-error" class="mt-4 hidden rounded-lg border border-red-300 bg-red-50 p-4 text-sm text-red-700">
+        <span id="partner-error-text"></span>
       </div>
     </div>
   </div>
@@ -83,3 +103,46 @@ const steps = [
 </section>
 
 </Layout>
+
+<script>
+  const form = document.getElementById('partner-form') as HTMLFormElement;
+  const success = document.getElementById('partner-success')!;
+  const errorBox = document.getElementById('partner-error')!;
+  const errorText = document.getElementById('partner-error-text')!;
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = form.querySelector('button[type="submit"]') as HTMLButtonElement;
+    btn.disabled = true;
+    btn.textContent = 'Submitting…';
+
+    const data = {
+      companyName: (document.getElementById('company-name') as HTMLInputElement).value,
+      contactName: (document.getElementById('contact-name') as HTMLInputElement).value,
+      email: (document.getElementById('partner-email') as HTMLInputElement).value,
+      phone: (document.getElementById('partner-phone') as HTMLInputElement).value,
+      country: (document.getElementById('partner-country') as HTMLSelectElement).value,
+      metals: (document.getElementById('partner-metals') as HTMLInputElement).value,
+    };
+
+    try {
+      const res = await fetch('/api/partners', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      const result = await res.json();
+      if (res.ok && !result.error) {
+        form.classList.add('hidden');
+        success.classList.remove('hidden');
+      } else {
+        throw new Error(result.error || 'Submission failed');
+      }
+    } catch (err) {
+      errorText.textContent = (err as Error).message;
+      errorBox.classList.remove('hidden');
+      btn.disabled = false;
+      btn.textContent = 'Submit application →';
+    }
+  });
+</script>

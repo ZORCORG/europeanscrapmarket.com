@@ -1,0 +1,91 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+const title = 'Sign in | European Scrap Market';
+const description = 'Sign in to European Scrap Market with a magic link sent to your email. No password required.';
+---
+
+<Layout {title} {description}>
+  <section class="mx-auto max-w-md px-5 py-20">
+    <div class="text-center">
+      <h1 class="font-display text-3xl font-bold text-[var(--color-ink)]">Sign in</h1>
+      <p class="mt-2 text-sm text-[var(--color-faint)]">Enter your email and we'll send you a secure sign-in link.</p>
+    </div>
+
+    <form id="login-form" class="mt-8 space-y-4">
+      <div>
+        <label for="email" class="mono mb-1.5 block text-xs text-[var(--color-faint)]">EMAIL</label>
+        <input
+          type="email"
+          id="email"
+          name="email"
+          required
+          autocomplete="email"
+          placeholder="you@company.com"
+          class="w-full border border-[var(--color-line-strong)] bg-white px-3 py-2.5 text-sm outline-none focus:border-[var(--color-accent)]"
+        />
+      </div>
+
+      <button type="submit" class="btn btn-primary w-full">Send sign-in link</button>
+    </form>
+
+    <div id="status" class="mt-6 hidden rounded-sm border p-4 text-sm"></div>
+    <div id="dev-link" class="mt-4 hidden"></div>
+
+    <p class="mt-8 text-center text-xs text-[var(--color-faint)]">
+      No password needed — we use magic links for secure, passwordless authentication.
+    </p>
+  </section>
+</Layout>
+
+<script>
+  const form = document.getElementById('login-form') as HTMLFormElement;
+  const status = document.getElementById('status')!;
+  const devLink = document.getElementById('dev-link')!;
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = (document.getElementById('email') as HTMLInputElement).value;
+    const btn = form.querySelector('button') as HTMLButtonElement;
+    btn.disabled = true;
+    btn.textContent = 'Sending…';
+
+    try {
+      const res = await fetch('/api/auth/sign-in/magic-link', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+
+      status.classList.remove('hidden');
+      if (data.error) {
+        status.className = 'mt-6 rounded-sm border border-red-300 bg-red-50 p-4 text-sm text-red-700';
+        status.textContent = data.error;
+        btn.disabled = false;
+        btn.textContent = 'Send sign-in link';
+      } else {
+        status.className = 'mt-6 rounded-sm border border-green-300 bg-green-50 p-4 text-sm text-green-700';
+        status.textContent = data.message || 'Check your email for a sign-in link.';
+
+        // Dev mode: show the link directly
+        if (data.devLink) {
+          devLink.classList.remove('hidden');
+          devLink.innerHTML = `<div class="rounded-sm border border-[var(--color-line-strong)] bg-[var(--color-bg)] p-4 text-sm">
+            <p class="mono mb-2 text-xs text-[var(--color-faint)]">DEVELOPMENT MODE — NO EMAIL SENT</p>
+            <p class="mb-2">Click the link below to sign in:</p>
+            <a href="${data.devLink}" class="btn btn-primary">Sign in now</a>
+          </div>`;
+        }
+        btn.disabled = false;
+        btn.textContent = 'Send sign-in link';
+      }
+    } catch {
+      status.classList.remove('hidden');
+      status.className = 'mt-6 rounded-sm border border-red-300 bg-red-50 p-4 text-sm text-red-700';
+      status.textContent = 'Something went wrong. Please try again.';
+      btn.disabled = false;
+      btn.textContent = 'Send sign-in link';
+    }
+  });
+</script>
