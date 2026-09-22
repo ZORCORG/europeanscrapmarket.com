@@ -1,5 +1,7 @@
 name = "europeanscrapmarket"
+account_id = "d11b4f692d7cb931914b8ad0e787a32a"
 compatibility_date = "2025-01-01"
+compatibility_flags = ["nodejs_compat"]
 pages_build_output_dir = "dist"
 
 [[d1_databases]]

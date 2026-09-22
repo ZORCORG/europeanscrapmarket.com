@@ -135,7 +135,7 @@ const rest = countries.filter(c => !majorMarkets.includes(c.slug));
     const account = document.getElementById('header-account');
     const signout = document.getElementById('header-signout');
     if (!login || !account || !signout) return;
-    fetch('/api/auth/session').then(r => r.json()).then(function (data) {
+    fetch('/api/auth/get-session').then(r => r.json()).then(function (data) {
       if (data.user) {
         account.classList.remove('hidden');
         signout.classList.remove('hidden');
@@ -145,7 +145,11 @@ const rest = countries.filter(c => !majorMarkets.includes(c.slug));
           account.textContent = 'Admin panel';
         }
         signout.addEventListener('click', function () {
-          fetch('/api/auth/sign-out', { method: 'POST' }).then(function () {
+          fetch('/api/auth/sign-out', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: '{}',
+          }).then(function () {
             window.location.href = '/';
           });
         });
