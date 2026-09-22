@@ -91,7 +91,10 @@ export async function getSessionUser(
   secret: string,
   siteUrl: string,
   request: Request,
-): Promise<{ id: string; email: string; name: string; role: string } | null> {
+): Promise<{
+  id: string; email: string; name: string; role: string;
+  company?: string; phone?: string; country?: string; status?: string;
+} | null> {
   const auth = createAuth({
     db,
     secret,
@@ -101,10 +104,15 @@ export async function getSessionUser(
   });
   const session = await auth.api.getSession({ headers: request.headers });
   if (!session) return null;
+  const u = session.user as Record<string, unknown>;
   return {
-    id: session.user.id,
-    email: session.user.email,
-    name: session.user.name,
-    role: (session.user as Record<string, unknown>).role as string,
+    id: u.id as string,
+    email: u.email as string,
+    name: u.name as string,
+    role: (u.role as string) || 'buyer',
+    company: u.company as string | undefined,
+    phone: u.phone as string | undefined,
+    country: u.country as string | undefined,
+    status: u.status as string | undefined,
   };
 }

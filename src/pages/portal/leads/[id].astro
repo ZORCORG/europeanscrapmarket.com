@@ -1,0 +1,253 @@
+---
+import PortalLayout from '../../../components/PortalLayout.astro';
+import { scrapClasses } from '../../../data/countries';
+
+const title = 'Portal — Lead detail | European Scrap Market';
+const description = 'View lead details and place a bid.';
+---
+
+<PortalLayout {title} {description} active="leads">
+  <a href="/portal/leads" class="text-sm text-[var(--color-accent)] hover:underline">← Back to leads</a>
+  <div id="lead-detail" class="mt-4">
+    <p class="text-sm text-[var(--color-faint)]">Loading lead…</p>
+  </div>
+</PortalLayout>
+
+<script is:inline define:vars={{ scrapClasses: scrapClasses.map(s => ({ slug: s.slug, name: s.name })) }}>
+  const leadId = window.location.pathname.split('/').pop();
+
+  async function loadLead() {
+    const container = document.getElementById('lead-detail')!;
+
+    try {
+      const res = await fetch(`/api/portal/leads/${leadId}`);
+      if (!res.ok) {
+        if (res.status === 404) {
+          container.innerHTML = '<p class="text-sm text-red-600">Lead not found.</p>';
+          return;
+        }
+        throw new Error('Failed to load');
+      }
+      const data = await res.json();
+      const lead = data.lead;
+      const bids = data.bids || [];
+      const messages = data.messages || [];
+
+      const scrapName = scrapClasses.find(s => s.slug === lead.scrap_class)?.name || lead.scrap_class;
+
+      let html = `
+        <div class="border border-[var(--color-line)] bg-white p-6">
+          <div class="flex items-center justify-between">
+            <h1 class="font-display text-xl font-bold text-[var(--color-ink)]">${scrapName}</h1>
+            <span class="mono text-[10px] uppercase text-[var(--color-faint)]">${lead.status}</span>
+          </div>
+          <div class="mt-4 grid grid-cols-2 gap-4 text-sm">
+            <div><span class="mono text-xs text-[var(--color-faint)]">COUNTRY</span><p>${lead.country || '—'}</p></div>
+            <div><span class="mono text-xs text-[var(--color-faint)]">CITY</span><p>${lead.city || '—'}</p></div>
+            <div><span class="mono text-xs text-[var(--color-faint)]">WEIGHT</span><p>${lead.weight_kg ? lead.weight_kg + ' kg' : 'Not specified'}</p></div>
+            <div><span class="mono text-xs text-[var(--color-faint)]">SUBMITTED</span><p>${String(lead.created_at || '').slice(0, 10)}</p></div>
+          </div>
+          ${lead.description ? `<div class="mt-4"><span class="mono text-xs text-[var(--color-faint)]">DESCRIPTION</span><p class="mt-1 text-sm">${lead.description}</p></div>` : ''}
+          ${data.isAssigned && lead.email ? `<div class="mt-4 p-3 bg-[var(--color-bg)] border border-[var(--color-line)]">
+            <p class="mono text-xs text-[var(--color-accent)]">SELLER CONTACT (ASSIGNED TO YOU)</p>
+            <p class="mt-1 text-sm">${lead.email}${lead.phone ? ' · ' + lead.phone : ''}</p>
+          </div>` : ''}
+        </div>
+      `;
+
+      // Bid form (if can bid)
+      if (data.canBid && !data.isAssigned) {
+        html += `
+          <div class="mt-6 border border-[var(--color-line)] bg-white p-6">
+            <h2 class="font-display text-lg font-bold text-[var(--color-ink)]">Place your bid</h2>
+            <form id="bid-form" class="mt-4 space-y-4">
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="mono text-xs text-[var(--color-faint)]">PRICE (€/KG)</label>
+                  <input type="number" step="0.01" id="bid-price-per-kg" class="mt-1 w-full border border-[var(--color-line-strong)] bg-white px-3 py-2 text-sm focus:border-[var(--color-accent)] outline-none" placeholder="e.g. 6.50" />
+                </div>
+                <div>
+                  <label class="mono text-xs text-[var(--color-faint)]">TOTAL PRICE (€)</label>
+                  <input type="number" step="0.01" id="bid-price-eur" class="mt-1 w-full border border-[var(--color-line-strong)] bg-white px-3 py-2 text-sm focus:border-[var(--color-accent)] outline-none" placeholder="e.g. 350" />
+                </div>
+              </div>
+              <div>
+                <label class="mono text-xs text-[var(--color-faint)]">MESSAGE TO SELLER</label>
+                <textarea id="bid-message" rows="3" class="mt-1 w-full border border-[var(--color-line-strong)] bg-white px-3 py-2 text-sm focus:border-[var(--color-accent)] outline-none" placeholder="Describe your offer, pickup terms, etc."></textarea>
+              </div>
+              <div class="flex items-center gap-4">
+                <label class="flex items-center gap-2 text-sm">
+                  <input type="checkbox" id="bid-priority" class="accent-[var(--color-accent)]" />
+                  Priority bid (first-move, +€14.90/mo)
+                </label>
+              </div>
+              <button type="submit" class="btn btn-primary">Submit bid</button>
+              <span id="bid-status" class="ml-3 text-sm"></span>
+            </form>
+          </div>
+        `;
+      }
+
+      // Bids list
+      if (bids.length > 0) {
+        html += `
+          <div class="mt-6 border border-[var(--color-line)] bg-white p-6">
+            <h2 class="font-display text-lg font-bold text-[var(--color-ink)]">Bids (${bids.length})</h2>
+            <div class="mt-4 space-y-3">
+              ${bids.map((b: Record<string, unknown>) => {
+                const isMine = b.partner_id === (window as Record<string, unknown>).__userId;
+                const statusColor = b.status === 'accepted' ? 'text-green-600' : b.status === 'rejected' ? 'text-red-600' : 'text-amber-600';
+                return `
+                  <div class="border border-[var(--color-line)] p-4 ${b.status === 'accepted' ? 'border-green-300 bg-green-50' : ''}">
+                    <div class="flex items-center justify-between">
+                      <div>
+                        <p class="text-sm font-medium ${isMine ? 'text-[var(--color-accent)]' : 'text-[var(--color-ink)]'}">
+                          ${isMine ? 'You' : b.partner_company || b.partner_name || 'Partner'}
+                          ${b.priority ? '<span class="ml-2 mono text-[10px] text-amber-600">PRIORITY</span>' : ''}
+                        </p>
+                        <p class="text-xs text-[var(--color-faint)] mt-1">
+                          ${b.price_eur ? `€${b.price_eur} total` : ''}
+                          ${b.price_eur && b.price_per_kg ? ' · ' : ''}
+                          ${b.price_per_kg ? `€${b.price_per_kg}/kg` : ''}
+                        </p>
+                        ${b.message ? `<p class="text-xs text-[var(--color-ink)] mt-2">${b.message}</p>` : ''}
+                      </div>
+                      <span class="mono text-[10px] uppercase ${statusColor}">${b.status}</span>
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        `;
+      }
+
+      // Chat (if assigned or has bid)
+      if (data.isAssigned || (messages.length > 0)) {
+        html += `
+          <div class="mt-6 border border-[var(--color-line)] bg-white p-6">
+            <h2 class="font-display text-lg font-bold text-[var(--color-ink)]">Chat with seller</h2>
+            <div id="chat-messages" class="mt-4 max-h-80 overflow-y-auto space-y-2">
+              ${messages.length === 0 ? '<p class="text-sm text-[var(--color-faint)]">No messages yet. Start the conversation.</p>' : ''}
+              ${messages.map((m: Record<string, unknown>) => `
+                <div class="${m.sender_role === 'partner' ? 'text-right' : 'text-left'}">
+                  <span class="inline-block rounded px-3 py-2 text-sm ${m.sender_role === 'partner' ? 'bg-[var(--color-accent)] text-white' : 'bg-[var(--color-bg)] text-[var(--color-ink)]'}">
+                    ${m.message}
+                  </span>
+                  <p class="mono text-[10px] text-[var(--color-faint)] mt-1">${String(m.created_at || '').slice(11, 16)}</p>
+                </div>
+              `).join('')}
+            </div>
+            ${data.isAssigned || data.hasBid ? `
+              <form id="chat-form" class="mt-4 flex gap-2">
+                <input type="text" id="chat-input" maxlength="2000" class="flex-1 border border-[var(--color-line-strong)] bg-white px-3 py-2 text-sm focus:border-[var(--color-accent)] outline-none" placeholder="Type a message…" />
+                <button type="submit" class="btn btn-primary shrink-0">Send</button>
+              </form>
+            ` : ''}
+          </div>
+        `;
+      }
+
+      // Action buttons (if assigned)
+      if (data.isAssigned) {
+        html += `
+          <div class="mt-6 flex gap-3">
+            <button id="complete-btn" class="btn btn-primary">Mark as completed</button>
+            <button id="archive-btn" class="btn border border-[var(--color-line)] bg-white text-[var(--color-ink)] hover:border-[var(--color-accent)]">Archive</button>
+          </div>
+        `;
+      }
+
+      container.innerHTML = html;
+
+      // Bid form handler
+      document.getElementById('bid-form')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const statusEl = document.getElementById('bid-status')!;
+        const pricePerKg = (document.getElementById('bid-price-per-kg') as HTMLInputElement).value;
+        const priceEur = (document.getElementById('bid-price-eur') as HTMLInputElement).value;
+        const message = (document.getElementById('bid-message') as HTMLTextAreaElement).value;
+        const priority = (document.getElementById('bid-priority') as HTMLInputElement).checked;
+
+        if (!pricePerKg && !priceEur) {
+          statusEl.textContent = 'Enter a price';
+          statusEl.className = 'ml-3 text-sm text-red-600';
+          return;
+        }
+
+        statusEl.textContent = 'Submitting…';
+        statusEl.className = 'ml-3 text-sm text-[var(--color-faint)]';
+
+        try {
+          const res = await fetch(`/api/portal/leads/${leadId}/bid`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              pricePerKg: pricePerKg || null,
+              priceEur: priceEur || null,
+              message: message || null,
+              priority,
+            }),
+          });
+          const data = await res.json();
+          if (res.ok) {
+            statusEl.textContent = 'Bid placed ✓';
+            statusEl.className = 'ml-3 text-sm text-green-600';
+            setTimeout(() => loadLead(), 1000);
+          } else {
+            statusEl.textContent = data.error || 'Failed';
+            statusEl.className = 'ml-3 text-sm text-red-600';
+          }
+        } catch {
+          statusEl.textContent = 'Error';
+          statusEl.className = 'ml-3 text-sm text-red-600';
+        }
+      });
+
+      // Chat form handler
+      document.getElementById('chat-form')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const input = document.getElementById('chat-input') as HTMLInputElement;
+        const msg = input.value.trim();
+        if (!msg) return;
+        input.value = '';
+
+        try {
+          await fetch(`/api/portal/leads/${leadId}/messages`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: msg }),
+          });
+          loadLead();
+        } catch {
+          // ignore
+        }
+      });
+
+      // Action buttons
+      document.getElementById('complete-btn')?.addEventListener('click', async () => {
+        await fetch(`/api/portal/leads/${leadId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'complete' }),
+        });
+        window.location.href = '/portal/leads';
+      });
+
+      document.getElementById('archive-btn')?.addEventListener('click', async () => {
+        await fetch(`/api/portal/leads/${leadId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'archive' }),
+        });
+        window.location.href = '/portal/leads';
+      });
+
+    } catch (err) {
+      container.innerHTML = '<p class="text-sm text-red-600">Failed to load lead.</p>';
+      console.error(err);
+    }
+  }
+
+  loadLead();
+</script>

@@ -1,0 +1,99 @@
+---
+import PortalLayout from '../../components/PortalLayout.astro';
+
+const title = 'Portal — Overview | European Scrap Market';
+const description = 'Your scrap yard dashboard.';
+---
+
+<PortalLayout {title} {description} active="dashboard">
+  <div id="dashboard-content">
+    <h1 class="font-display text-2xl font-bold text-[var(--color-ink)]">Overview</h1>
+    <p class="mt-1 text-sm text-[var(--color-faint)]">Your scrap yard at a glance.</p>
+
+    <!-- Stats grid -->
+    <div id="stats-grid" class="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
+      <!-- Filled by JS -->
+      <div class="border border-[var(--color-line)] bg-white p-4">
+        <p class="mono text-[10px] text-[var(--color-faint)]">NEW LEADS</p>
+        <p class="mt-1 font-display text-2xl font-bold" id="stat-new">—</p>
+      </div>
+      <div class="border border-[var(--color-line)] bg-white p-4">
+        <p class="mono text-[10px] text-[var(--color-faint)]">ACTIVE BIDS</p>
+        <p class="mt-1 font-display text-2xl font-bold" id="stat-bidding">—</p>
+      </div>
+      <div class="border border-[var(--color-line)] bg-white p-4">
+        <p class="mono text-[10px] text-[var(--color-faint)]">WON DEALS</p>
+        <p class="mt-1 font-display text-2xl font-bold" id="stat-won">—</p>
+      </div>
+      <div class="border border-[var(--color-line)] bg-white p-4">
+        <p class="mono text-[10px] text-[var(--color-faint)]">UNREAD</p>
+        <p class="mt-1 font-display text-2xl font-bold" id="stat-unread">—</p>
+      </div>
+    </div>
+
+    <!-- Recent leads -->
+    <div class="mt-8">
+      <div class="flex items-center justify-between">
+        <h2 class="font-display text-lg font-bold text-[var(--color-ink)]">Latest leads</h2>
+        <a href="/portal/leads" class="text-sm text-[var(--color-accent)] hover:underline">View all →</a>
+      </div>
+      <div id="recent-leads" class="mt-4 space-y-3">
+        <p class="text-sm text-[var(--color-faint)]">Loading…</p>
+      </div>
+    </div>
+
+    <!-- Quick actions -->
+    <div class="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
+      <a href="/portal/leads" class="border border-[var(--color-line)] bg-white p-4 text-center hover:border-[var(--color-accent)] transition-colors">
+        <p class="text-sm font-medium text-[var(--color-ink)]">Browse leads</p>
+      </a>
+      <a href="/portal/prices" class="border border-[var(--color-line)] bg-white p-4 text-center hover:border-[var(--color-accent)] transition-colors">
+        <p class="text-sm font-medium text-[var(--color-ink)]">Update prices</p>
+      </a>
+      <a href="/portal/zones" class="border border-[var(--color-line)] bg-white p-4 text-center hover:border-[var(--color-accent)] transition-colors">
+        <p class="text-sm font-medium text-[var(--color-ink)]">Manage zones</p>
+      </a>
+      <a href="/portal/ads" class="border border-[var(--color-line)] bg-white p-4 text-center hover:border-[var(--color-accent)] transition-colors">
+        <p class="text-sm font-medium text-[var(--color-ink)]">Post a listing</p>
+      </a>
+    </div>
+  </div>
+</PortalLayout>
+
+<script>
+  (async () => {
+    try {
+      const res = await fetch('/api/portal/stats');
+      if (!res.ok) return;
+      const data = await res.json();
+      const s = data.stats || {};
+
+      document.getElementById('stat-new')!.textContent = String(s.newLeads ?? 0);
+      document.getElementById('stat-bidding')!.textContent = String(s.biddingLeads ?? 0);
+      document.getElementById('stat-won')!.textContent = String(s.wonLeads ?? 0);
+      document.getElementById('stat-unread')!.textContent = String(s.unreadMessages ?? 0);
+
+      const container = document.getElementById('recent-leads')!;
+      const leads = data.recentLeads || [];
+
+      if (leads.length === 0) {
+        container.innerHTML = '<p class="text-sm text-[var(--color-faint)]">No new leads yet. Check back soon.</p>';
+        return;
+      }
+
+      container.innerHTML = leads.map((lead: Record<string, unknown>) => `
+        <a href="/portal/leads/${lead.id}" class="block border border-[var(--color-line)] bg-white p-4 hover:border-[var(--color-accent)] transition-colors">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-[var(--color-ink)]">${String(lead.scrap_class || 'Unknown').replace(/\b\w/g, c => c.toUpperCase())} · ${String(lead.country || '')}</p>
+              <p class="text-xs text-[var(--color-faint)]">${lead.weight_kg ? lead.weight_kg + ' kg' : 'Weight unknown'} · ${lead.bid_count ? lead.bid_count + ' bid(s)' : 'No bids yet'}</p>
+            </div>
+            <span class="mono text-[10px] text-[var(--color-faint)]">${String(lead.created_at || '').slice(0, 10)}</span>
+          </div>
+        </a>
+      `).join('');
+    } catch (err) {
+      console.error('Dashboard error:', err);
+    }
+  })();
+</script>

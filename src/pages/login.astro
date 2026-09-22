@@ -58,6 +58,9 @@ const description = 'Sign in to European Scrap Market with a magic link sent to 
     <p class="mt-8 text-center text-xs text-[var(--color-faint)]">
       Magic links are passwordless — just click the link in your email. You can also use a password if you prefer.
     </p>
+    <p class="mt-4 text-center text-xs">
+      <a href="/become-partner" class="text-[var(--color-accent)] hover:underline">Scrap yard? Apply for a partner account →</a>
+    </p>
   </section>
 </Layout>
 
@@ -124,7 +127,16 @@ const description = 'Sign in to European Scrap Market with a magic link sent to 
       });
       const data = await res.json();
       if (data.status || data.ok || (data.token && data.user)) {
-        window.location.href = '/account';
+        // Check role and redirect accordingly
+        try {
+          const sessRes = await fetch('/api/auth/get-session', { credentials: 'include' });
+          const sessData = await sessRes.json();
+          const role = sessData?.user?.role || 'buyer';
+          const redirect = new URLSearchParams(window.location.search).get('redirect');
+          window.location.href = redirect || (role === 'partner' || role === 'admin' ? '/portal' : '/account');
+        } catch {
+          window.location.href = '/account';
+        }
       } else {
         showStatus(data.message || data.error || 'Authentication failed.', false);
       }

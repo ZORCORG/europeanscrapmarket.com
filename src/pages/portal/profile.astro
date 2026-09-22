@@ -1,0 +1,233 @@
+---
+import PortalLayout from '../../components/PortalLayout.astro';
+import { scrapClasses } from '../../data/countries';
+
+const title = 'Portal — Yard profile | European Scrap Market';
+const description = 'Manage your scrap yard profile.';
+
+const classes = scrapClasses.map(s => ({ slug: s.slug, name: s.name }));
+---
+
+<PortalLayout {title} {description} active="profile">
+  <h1 class="font-display text-2xl font-bold text-[var(--color-ink)]">Yard profile</h1>
+  <p class="mt-1 text-sm text-[var(--color-faint)]">Your business details shown to sellers.</p>
+
+  <form id="profile-form" class="mt-6 space-y-8">
+    <!-- Company -->
+    <fieldset class="border border-[var(--color-line)] bg-white p-6">
+      <legend class="px-2 font-display text-sm font-bold text-[var(--color-ink)]">Company</legend>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="mono text-xs text-[var(--color-faint)]">COMPANY NAME</label>
+          <input type="text" id="company-name" class="mt-1 w-full border border-[var(--color-line-strong)] bg-white px-3 py-2 text-sm focus:border-[var(--color-accent)] outline-none" />
+        </div>
+        <div>
+          <label class="mono text-xs text-[var(--color-faint)]">ORG. NUMBER</label>
+          <input type="text" id="org-number" class="mt-1 w-full border border-[var(--color-line-strong)] bg-white px-3 py-2 text-sm focus:border-[var(--color-accent)] outline-none" />
+        </div>
+        <div>
+          <label class="mono text-xs text-[var(--color-faint)]">ADDRESS</label>
+          <input type="text" id="address" class="mt-1 w-full border border-[var(--color-line-strong)] bg-white px-3 py-2 text-sm focus:border-[var(--color-accent)] outline-none" />
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="mono text-xs text-[var(--color-faint)]">POSTAL CODE</label>
+            <input type="text" id="postal-code" class="mt-1 w-full border border-[var(--color-line-strong)] bg-white px-3 py-2 text-sm focus:border-[var(--color-accent)] outline-none" />
+          </div>
+          <div>
+            <label class="mono text-xs text-[var(--color-faint)]">CITY</label>
+            <input type="text" id="city" class="mt-1 w-full border border-[var(--color-line-strong)] bg-white px-3 py-2 text-sm focus:border-[var(--color-accent)] outline-none" />
+          </div>
+        </div>
+        <div>
+          <label class="mono text-xs text-[var(--color-faint)]">COUNTRY</label>
+          <input type="text" id="country" class="mt-1 w-full border border-[var(--color-line-strong)] bg-white px-3 py-2 text-sm focus:border-[var(--color-accent)] outline-none" />
+        </div>
+        <div>
+          <label class="mono text-xs text-[var(--color-faint)]">RESPONSE TIME</label>
+          <input type="text" id="response-time" class="mt-1 w-full border border-[var(--color-line-strong)] bg-white px-3 py-2 text-sm focus:border-[var(--color-accent)] outline-none" placeholder="e.g. Within 2 hours" />
+        </div>
+      </div>
+    </fieldset>
+
+    <!-- Contact -->
+    <fieldset class="border border-[var(--color-line)] bg-white p-6">
+      <legend class="px-2 font-display text-sm font-bold text-[var(--color-ink)]">Contact</legend>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="mono text-xs text-[var(--color-faint)]">CONTACT NAME</label>
+          <input type="text" id="name" class="mt-1 w-full border border-[var(--color-line-strong)] bg-white px-3 py-2 text-sm focus:border-[var(--color-accent)] outline-none" />
+        </div>
+        <div>
+          <label class="mono text-xs text-[var(--color-faint)]">PHONE</label>
+          <input type="tel" id="phone" class="mt-1 w-full border border-[var(--color-line-strong)] bg-white px-3 py-2 text-sm focus:border-[var(--color-accent)] outline-none" />
+        </div>
+      </div>
+    </fieldset>
+
+    <!-- Materials -->
+    <fieldset class="border border-[var(--color-line)] bg-white p-6">
+      <legend class="px-2 font-display text-sm font-bold text-[var(--color-ink)]">Materials handled</legend>
+      <div id="materials-check" class="grid grid-cols-2 gap-2 sm:grid-cols-3">
+        {classes.map(c => (
+          <label class="flex items-center gap-2 text-sm">
+            <input type="checkbox" data-material={c.slug} class="accent-[var(--color-accent)]" />
+            {c.name}
+          </label>
+        ))}
+      </div>
+    </fieldset>
+
+    <!-- Logistics -->
+    <fieldset class="border border-[var(--color-line)] bg-white p-6">
+      <legend class="px-2 font-display text-sm font-bold text-[var(--color-ink)]">Logistics & hours</legend>
+      <div class="grid grid-cols-2 gap-4">
+        <label class="flex items-center gap-2 text-sm"><input type="checkbox" id="accepts-dropoff" class="accent-[var(--color-accent)]" /> Accepts drop-off</label>
+        <label class="flex items-center gap-2 text-sm"><input type="checkbox" id="accepts-pickup" class="accent-[var(--color-accent)]" /> Offers pickup</label>
+        <label class="flex items-center gap-2 text-sm"><input type="checkbox" id="offers-container" class="accent-[var(--color-accent)]" /> Container service</label>
+        <label class="flex items-center gap-2 text-sm"><input type="checkbox" id="vehicles-scrapping" class="accent-[var(--color-accent)]" /> Vehicle scrapping</label>
+        <div class="col-span-2">
+          <label class="mono text-xs text-[var(--color-faint)]">MIN. WEIGHT (KG)</label>
+          <input type="number" step="1" id="min-weight-kg" class="mt-1 w-full border border-[var(--color-line-strong)] bg-white px-3 py-2 text-sm focus:border-[var(--color-accent)] outline-none" />
+        </div>
+        <div class="col-span-2">
+          <label class="mono text-xs text-[var(--color-faint)]">OPENING HOURS</label>
+          <input type="text" id="opening-hours" class="mt-1 w-full border border-[var(--color-line-strong)] bg-white px-3 py-2 text-sm focus:border-[var(--color-accent)] outline-none" placeholder="e.g. Mon–Fri 08:00–17:00" />
+        </div>
+      </div>
+    </fieldset>
+
+    <!-- Presentation -->
+    <fieldset class="border border-[var(--color-line)] bg-white p-6">
+      <legend class="px-2 font-display text-sm font-bold text-[var(--color-ink)]">Presentation</legend>
+      <label class="mono text-xs text-[var(--color-faint)]">ABOUT YOUR YARD</label>
+      <textarea id="about" rows="4" class="mt-1 w-full border border-[var(--color-line-strong)] bg-white px-3 py-2 text-sm focus:border-[var(--color-accent)] outline-none" placeholder="Tell sellers about your yard, equipment, and what makes you different."></textarea>
+    </fieldset>
+
+    <!-- Trust -->
+    <fieldset class="border border-[var(--color-line)] bg-white p-6">
+      <legend class="px-2 font-display text-sm font-bold text-[var(--color-ink)]">Trust & verification</legend>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="mono text-xs text-[var(--color-faint)]">PERMIT / LICENSE NUMBER</label>
+          <input type="text" id="permit-number" class="mt-1 w-full border border-[var(--color-line-strong)] bg-white px-3 py-2 text-sm focus:border-[var(--color-accent)] outline-none" />
+        </div>
+        <div>
+          <label class="mono text-xs text-[var(--color-faint)]">PERMIT ISSUER</label>
+          <input type="text" id="permit-issuer" class="mt-1 w-full border border-[var(--color-line-strong)] bg-white px-3 py-2 text-sm focus:border-[var(--color-accent)] outline-none" placeholder="e.g. Umweltbundesamt" />
+        </div>
+      </div>
+      <div id="trust-status" class="mt-3"></div>
+    </fieldset>
+
+    <div class="flex items-center gap-4">
+      <button type="submit" class="btn btn-primary">Save profile</button>
+      <span id="save-status" class="text-sm"></span>
+    </div>
+  </form>
+</PortalLayout>
+
+<script is:inline define:vars={{ classes }}>
+  async function loadProfile() {
+    try {
+      const res = await fetch('/api/portal/profile');
+      if (!res.ok) return;
+      const data = await res.json();
+      const p = data.profile || {};
+      const u = data.user || {};
+
+      const setVal = (id: string, val: unknown) => {
+        const el = document.getElementById(id);
+        if (el && val != null) (el as HTMLInputElement).value = String(val);
+      };
+
+      setVal('company-name', p.company_name);
+      setVal('org-number', p.org_number);
+      setVal('address', p.address);
+      setVal('postal-code', p.postal_code);
+      setVal('city', p.city);
+      setVal('country', p.country);
+      setVal('response-time', p.response_time);
+      setVal('name', u.name);
+      setVal('phone', u.phone);
+      setVal('opening-hours', p.opening_hours);
+      setVal('min-weight-kg', p.min_weight_kg);
+      setVal('about', p.about);
+      setVal('permit-number', p.permit_number);
+      setVal('permit-issuer', p.permit_issuer);
+
+      const setChk = (id: string, val: unknown) => {
+        const el = document.getElementById(id) as HTMLInputElement;
+        if (el) el.checked = !!val;
+      };
+      setChk('accepts-dropoff', p.accepts_dropoff);
+      setChk('accepts-pickup', p.accepts_pickup);
+      setChk('offers-container', p.offers_container);
+      setChk('vehicles-scrapping', p.vehicles_scrapping);
+
+      // Materials
+      let materials: string[] = [];
+      try { materials = JSON.parse(p.materials || '[]'); } catch {}
+      document.querySelectorAll('[data-material]').forEach(cb => {
+        (cb as HTMLInputElement).checked = materials.includes(cb.getAttribute('data-material'));
+      });
+
+      // Trust status
+      const ts = document.getElementById('trust-status')!;
+      const statusMap: Record<string, string> = { pending: 'Pending verification', verified: 'Verified ✓', rejected: 'Verification rejected' };
+      const colors: Record<string, string> = { pending: 'text-amber-600', verified: 'text-green-600', rejected: 'text-red-600' };
+      ts.innerHTML = `<span class="mono text-xs ${colors[p.trust_status] || 'text-amber-600'}">${statusMap[p.trust_status] || 'Pending'}</span>`;
+    } catch {}
+  }
+
+  document.getElementById('profile-form')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const statusEl = document.getElementById('save-status')!;
+    statusEl.textContent = 'Saving…';
+    statusEl.className = 'text-sm text-[var(--color-faint)]';
+
+    const materials = Array.from(document.querySelectorAll('[data-material]:checked')).map(cb => cb.getAttribute('data-material'));
+
+    const body = {
+      company_name: (document.getElementById('company-name') as HTMLInputElement).value,
+      org_number: (document.getElementById('org-number') as HTMLInputElement).value,
+      address: (document.getElementById('address') as HTMLInputElement).value,
+      postal_code: (document.getElementById('postal-code') as HTMLInputElement).value,
+      city: (document.getElementById('city') as HTMLInputElement).value,
+      country: (document.getElementById('country') as HTMLInputElement).value,
+      response_time: (document.getElementById('response-time') as HTMLInputElement).value,
+      name: (document.getElementById('name') as HTMLInputElement).value,
+      phone: (document.getElementById('phone') as HTMLInputElement).value,
+      opening_hours: (document.getElementById('opening-hours') as HTMLInputElement).value,
+      min_weight_kg: (document.getElementById('min-weight-kg') as HTMLInputElement).value,
+      about: (document.getElementById('about') as HTMLTextAreaElement).value,
+      permit_number: (document.getElementById('permit-number') as HTMLInputElement).value,
+      permit_issuer: (document.getElementById('permit-issuer') as HTMLInputElement).value,
+      accepts_dropoff: (document.getElementById('accepts-dropoff') as HTMLInputElement).checked,
+      accepts_pickup: (document.getElementById('accepts-pickup') as HTMLInputElement).checked,
+      offers_container: (document.getElementById('offers-container') as HTMLInputElement).checked,
+      vehicles_scrapping: (document.getElementById('vehicles-scrapping') as HTMLInputElement).checked,
+      materials: JSON.stringify(materials),
+    };
+
+    try {
+      const res = await fetch('/api/portal/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      if (res.ok) {
+        statusEl.textContent = 'Saved ✓';
+        statusEl.className = 'text-sm text-green-600';
+      } else {
+        statusEl.textContent = 'Failed to save';
+        statusEl.className = 'text-sm text-red-600';
+      }
+    } catch {
+      statusEl.textContent = 'Error';
+      statusEl.className = 'text-sm text-red-600';
+    }
+  });
+
+  loadProfile();
+</script>

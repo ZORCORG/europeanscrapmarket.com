@@ -1,0 +1,126 @@
+---
+import PortalLayout from '../../components/PortalLayout.astro';
+import { scrapClasses } from '../../data/countries';
+
+const title = 'Portal — Price book | European Scrap Market';
+const description = 'Manage your material prices.';
+
+const classes = scrapClasses.map(s => ({ slug: s.slug, name: s.name }));
+---
+
+<PortalLayout {title} {description} active="prices">
+  <h1 class="font-display text-2xl font-bold text-[var(--color-ink)]">Price book</h1>
+  <p class="mt-1 text-sm text-[var(--color-faint)]">Set your prices per material (€/kg). Shown to sellers in your zones.</p>
+
+  <form id="prices-form" class="mt-6">
+    <div class="border border-[var(--color-line)] bg-white">
+      <table class="w-full">
+        <thead>
+          <tr class="border-b border-[var(--color-line)]">
+            <th class="px-4 py-3 text-left mono text-xs text-[var(--color-faint)]">MATERIAL</th>
+            <th class="px-4 py-3 text-right mono text-xs text-[var(--color-faint)]">PRICE (€/KG)</th>
+            <th class="px-4 py-3 text-left mono text-xs text-[var(--color-faint)]">CURRENCY</th>
+            <th class="px-4 py-3 text-left mono text-xs text-[var(--color-faint)]">UNIT</th>
+          </tr>
+        </thead>
+        <tbody>
+          {classes.map(c => (
+            <tr class="border-b border-[var(--color-line)] last:border-0">
+              <td class="px-4 py-3 text-sm text-[var(--color-ink)]">{c.name}</td>
+              <td class="px-4 py-3 text-right">
+                <input type="number" step="0.01" data-scrap={c.slug} data-field="pricePerKg" class="w-28 border border-[var(--color-line-strong)] bg-white px-2 py-1 text-sm text-right focus:border-[var(--color-accent)] outline-none" placeholder="—" />
+              </td>
+              <td class="px-4 py-3">
+                <select data-scrap={c.slug} data-field="currency" class="border border-[var(--color-line-strong)] bg-white px-2 py-1 text-sm focus:border-[var(--color-accent)] outline-none">
+                  <option value="EUR">EUR</option>
+                  <option value="SEK">SEK</option>
+                  <option value="NOK">NOK</option>
+                  <option value="DKK">DKK</option>
+                  <option value="PLN">PLN</option>
+                  <option value="GBP">GBP</option>
+                </select>
+              </td>
+              <td class="px-4 py-3">
+                <select data-scrap={c.slug} data-field="unit" class="border border-[var(--color-line-strong)] bg-white px-2 py-1 text-sm focus:border-[var(--color-accent)] outline-none">
+                  <option value="kg">per kg</option>
+                  <option value="ton">per ton</option>
+                </select>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="mt-4 flex items-center gap-4">
+      <button type="submit" class="btn btn-primary">Save prices</button>
+      <span id="prices-status" class="text-sm"></span>
+    </div>
+  </form>
+</PortalLayout>
+
+<script>
+  (async () => {
+    // Load existing prices
+    try {
+      const res = await fetch('/api/portal/prices');
+      if (!res.ok) return;
+      const data = await res.json();
+      const prices = data.prices || [];
+
+      prices.forEach((p: Record<string, unknown>) => {
+        const slug = p.scrap_class as string;
+        const priceInput = document.querySelector(`[data-scrap="${slug}"][data-field="pricePerKg"]`) as HTMLInputElement;
+        const currencyInput = document.querySelector(`[data-scrap="${slug}"][data-field="currency"]`) as HTMLSelectElement;
+        const unitInput = document.querySelector(`[data-scrap="${slug}"][data-field="unit"]`) as HTMLSelectElement;
+
+        if (priceInput && p.price_per_kg != null) priceInput.value = String(p.price_per_kg);
+        if (currencyInput && p.currency) currencyInput.value = String(p.currency);
+        if (unitInput && p.unit) unitInput.value = String(p.unit);
+      });
+    } catch {}
+
+    // Save handler
+    document.getElementById('prices-form')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const statusEl = document.getElementById('prices-status')!;
+      statusEl.textContent = 'Saving…';
+      statusEl.className = 'text-sm text-[var(--color-faint)]';
+
+      const slugs = Array.from(document.querySelectorAll('[data-scrap]'))
+        .map(el => el.getAttribute('data-scrap'))
+        .filter((v, i, a) => v && a.indexOf(v) === i);
+
+      const prices = slugs.map(slug => {
+        const priceInput = document.querySelector(`[data-scrap="${slug}"][data-field="pricePerKg"]`) as HTMLInputElement;
+        const currencyInput = document.querySelector(`[data-scrap="${slug}"][data-field="currency"]`) as HTMLSelectElement;
+        const unitInput = document.querySelector(`[data-scrap="${slug}"][data-field="unit"]`) as HTMLSelectElement;
+
+        return {
+          scrapClass: slug,
+          pricePerKg: priceInput?.value ? Number(priceInput.value) : null,
+          currency: currencyInput?.value || 'EUR',
+          unit: unitInput?.value || 'kg',
+        };
+      }).filter(p => p.pricePerKg != null);
+
+      try {
+        const res = await fetch('/api/portal/prices', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prices }),
+        });
+        if (res.ok) {
+          statusEl.textContent = 'Saved ✓';
+          statusEl.className = 'text-sm text-green-600';
+        } else {
+          statusEl.textContent = 'Failed';
+          statusEl.className = 'text-sm text-red-600';
+        }
+      } catch {
+        statusEl.textContent = 'Error';
+        statusEl.className = 'text-sm text-red-600';
+      }
+    });
+  })();
+</script>

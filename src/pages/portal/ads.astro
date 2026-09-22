@@ -1,0 +1,180 @@
+---
+import PortalLayout from '../../components/PortalLayout.astro';
+import { scrapClasses, countries } from '../../data/countries';
+
+const title = 'Portal — My listings | European Scrap Market';
+const description = 'Manage your scrap listings.';
+
+const classes = scrapClasses.map(s => ({ slug: s.slug, name: s.name }));
+const countryList = countries.map(c => ({ slug: c.slug, name: c.name }));
+---
+
+<PortalLayout {title} {description} active="ads">
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="font-display text-2xl font-bold text-[var(--color-ink)]">My listings</h1>
+      <p class="mt-1 text-sm text-[var(--color-faint)]">Your scrap offers visible in the marketplace.</p>
+    </div>
+    <button id="new-ad-btn" class="btn btn-primary">+ New listing</button>
+  </div>
+
+  <!-- Ad list -->
+  <div id="ads-list" class="mt-6 space-y-3">
+    <p class="text-sm text-[var(--color-faint)]">Loading…</p>
+  </div>
+
+  <!-- New ad modal -->
+  <div id="ad-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+    <div class="w-full max-w-lg border border-[var(--color-line)] bg-white p-6 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="font-display text-lg font-bold text-[var(--color-ink)]">New listing</h2>
+        <button id="close-modal" class="text-[var(--color-faint)] hover:text-[var(--color-ink)]">✕</button>
+      </div>
+      <form id="ad-form" class="space-y-4">
+        <div>
+          <label class="mono text-xs text-[var(--color-faint)]">TITLE</label>
+          <input type="text" id="ad-title" required class="mt-1 w-full border border-[var(--color-line-strong)] bg-white px-3 py-2 text-sm focus:border-[var(--color-accent)] outline-none" placeholder="e.g. 500 kg copper wire" />
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="mono text-xs text-[var(--color-faint)]">SCRAP CLASS</label>
+            <select id="ad-scrap-class" required class="mt-1 w-full border border-[var(--color-line-strong)] bg-white px-3 py-2 text-sm focus:border-[var(--color-accent)] outline-none">
+              {classes.map(c => <option value={c.slug}>{c.name}</option>)}
+            </select>
+          </div>
+          <div>
+            <label class="mono text-xs text-[var(--color-faint)]">COUNTRY</label>
+            <select id="ad-country" required class="mt-1 w-full border border-[var(--color-line-strong)] bg-white px-3 py-2 text-sm focus:border-[var(--color-accent)] outline-none">
+              {countryList.map(c => <option value={c.slug}>{c.name}</option>)}
+            </select>
+          </div>
+        </div>
+        <div class="grid grid-cols-3 gap-4">
+          <div>
+            <label class="mono text-xs text-[var(--color-faint)]">CITY</label>
+            <input type="text" id="ad-city" class="mt-1 w-full border border-[var(--color-line-strong)] bg-white px-3 py-2 text-sm focus:border-[var(--color-accent)] outline-none" />
+          </div>
+          <div>
+            <label class="mono text-xs text-[var(--color-faint)]">WEIGHT (KG)</label>
+            <input type="number" step="1" id="ad-weight" class="mt-1 w-full border border-[var(--color-line-strong)] bg-white px-3 py-2 text-sm focus:border-[var(--color-accent)] outline-none" />
+          </div>
+          <div>
+            <label class="mono text-xs text-[var(--color-faint)]">PRICE (€)</label>
+            <input type="number" step="0.01" id="ad-price" class="mt-1 w-full border border-[var(--color-line-strong)] bg-white px-3 py-2 text-sm focus:border-[var(--color-accent)] outline-none" />
+          </div>
+        </div>
+        <div>
+          <label class="mono text-xs text-[var(--color-faint)]">DESCRIPTION</label>
+          <textarea id="ad-description" rows="3" class="mt-1 w-full border border-[var(--color-line-strong)] bg-white px-3 py-2 text-sm focus:border-[var(--color-accent)] outline-none"></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Publish listing</button>
+        <span id="ad-form-status" class="ml-3 text-sm"></span>
+      </form>
+    </div>
+  </div>
+</PortalLayout>
+
+<script>
+  (async () => {
+    const modal = document.getElementById('ad-modal')!;
+    const list = document.getElementById('ads-list')!;
+
+    async function loadAds() {
+      list.innerHTML = '<p class="text-sm text-[var(--color-faint)]">Loading…</p>';
+      try {
+        const res = await fetch('/api/portal/ads');
+        if (!res.ok) return;
+        const data = await res.json();
+        const ads = data.ads || [];
+
+        if (ads.length === 0) {
+          list.innerHTML = '<p class="text-sm text-[var(--color-faint)]">No listings yet. Click "New listing" to create one.</p>';
+          return;
+        }
+
+        list.innerHTML = ads.map((ad: Record<string, unknown>) => `
+          <div class="border border-[var(--color-line)] bg-white p-4">
+            <div class="flex items-center justify-between gap-4">
+              <div class="min-w-0 flex-1">
+                <div class="flex items-center gap-2">
+                  <p class="text-sm font-medium text-[var(--color-ink)] truncate">${ad.title}</p>
+                  <span class="mono text-[10px] uppercase ${ad.status === 'active' ? 'text-green-600' : ad.status === 'paused' ? 'text-amber-600' : 'text-red-600'}">${ad.status}</span>
+                </div>
+                <p class="text-xs text-[var(--color-faint)] mt-1">${ad.scrap_class} · ${ad.country}${ad.city ? ' · ' + ad.city : ''}${ad.weight_kg ? ' · ' + ad.weight_kg + ' kg' : ''}${ad.price_eur ? ' · €' + ad.price_eur : ''}</p>
+                ${ad.description ? `<p class="text-xs text-[var(--color-faint)] mt-1">${ad.description}</p>` : ''}
+              </div>
+              <div class="shrink-0 flex gap-2">
+                ${ad.status === 'active'
+                  ? `<button class="pause-btn text-sm text-amber-600 hover:underline" data-id="${ad.id}" data-action="paused">Pause</button>`
+                  : `<button class="activate-btn text-sm text-green-600 hover:underline" data-id="${ad.id}" data-action="active">Activate</button>`
+                }
+                <button class="delete-btn text-sm text-red-600 hover:underline" data-id="${ad.id}">Delete</button>
+              </div>
+            </div>
+          </div>
+        `).join('');
+
+        list.querySelectorAll('.pause-btn, .activate-btn').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            await fetch('/api/portal/ads', {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ adId: btn.getAttribute('data-id'), status: btn.getAttribute('data-action') }),
+            });
+            loadAds();
+          });
+        });
+
+        list.querySelectorAll('.delete-btn').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            if (!confirm('Delete this listing?')) return;
+            await fetch(`/api/portal/ads?id=${btn.getAttribute('data-id')}`, { method: 'DELETE' });
+            loadAds();
+          });
+        });
+      } catch {}
+    }
+
+    // Modal
+    document.getElementById('new-ad-btn')?.addEventListener('click', () => modal.classList.remove('hidden'));
+    document.getElementById('close-modal')?.addEventListener('click', () => modal.classList.add('hidden'));
+
+    document.getElementById('ad-form')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const statusEl = document.getElementById('ad-form-status')!;
+      statusEl.textContent = 'Publishing…';
+      statusEl.className = 'text-sm text-[var(--color-faint)]';
+
+      const body = {
+        title: (document.getElementById('ad-title') as HTMLInputElement).value,
+        scrapClass: (document.getElementById('ad-scrap-class') as HTMLSelectElement).value,
+        country: (document.getElementById('ad-country') as HTMLSelectElement).value,
+        city: (document.getElementById('ad-city') as HTMLInputElement).value,
+        weightKg: (document.getElementById('ad-weight') as HTMLInputElement).value,
+        priceEur: (document.getElementById('ad-price') as HTMLInputElement).value,
+        description: (document.getElementById('ad-description') as HTMLTextAreaElement).value,
+      };
+
+      try {
+        const res = await fetch('/api/portal/ads', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        if (res.ok) {
+          modal.classList.add('hidden');
+          (document.getElementById('ad-form') as HTMLFormElement).reset();
+          loadAds();
+        } else {
+          statusEl.textContent = 'Failed';
+          statusEl.className = 'text-sm text-red-600';
+        }
+      } catch {
+        statusEl.textContent = 'Error';
+        statusEl.className = 'text-sm text-red-600';
+      }
+    });
+
+    loadAds();
+  })();
+</script>

@@ -1,0 +1,186 @@
+---
+import PortalLayout from '../../components/PortalLayout.astro';
+
+const title = 'Portal — Settings | European Scrap Market';
+const description = 'Account settings.';
+---
+
+<PortalLayout {title} {description} active="settings">
+  <h1 class="font-display text-2xl font-bold text-[var(--color-ink)]">Settings</h1>
+  <p class="mt-1 text-sm text-[var(--color-faint)]">Manage your account and security.</p>
+
+  <!-- Account info -->
+  <div class="mt-6 border border-[var(--color-line)] bg-white p-6">
+    <h2 class="font-display text-sm font-bold text-[var(--color-ink)]">Account</h2>
+    <div id="account-info" class="mt-4 space-y-2">
+      <p class="text-sm text-[var(--color-faint)]">Loading…</p>
+    </div>
+  </div>
+
+  <!-- Change name -->
+  <div class="mt-6 border border-[var(--color-line)] bg-white p-6">
+    <h2 class="font-display text-sm font-bold text-[var(--color-ink)]">Display name</h2>
+    <form id="name-form" class="mt-4 flex gap-3">
+      <input type="text" id="settings-name" class="flex-1 border border-[var(--color-line-strong)] bg-white px-3 py-2 text-sm focus:border-[var(--color-accent)] outline-none" />
+      <button type="submit" class="btn btn-primary shrink-0">Save</button>
+      <span id="name-status" class="self-center text-sm"></span>
+    </form>
+  </div>
+
+  <!-- Change password -->
+  <div class="mt-6 border border-[var(--color-line)] bg-white p-6">
+    <h2 class="font-display text-sm font-bold text-[var(--color-ink)]">Password</h2>
+    <p id="password-state" class="mt-2 text-sm text-[var(--color-faint)]">Checking…</p>
+    <form id="password-form" class="mt-4 space-y-3 hidden">
+      <div>
+        <label class="mono text-xs text-[var(--color-faint)]">NEW PASSWORD</label>
+        <input type="password" id="new-password" class="mt-1 w-full border border-[var(--color-line-strong)] bg-white px-3 py-2 text-sm focus:border-[var(--color-accent)] outline-none" minlength="8" />
+      </div>
+      <div>
+        <label class="mono text-xs text-[var(--color-faint)]">CONFIRM PASSWORD</label>
+        <input type="password" id="confirm-password" class="mt-1 w-full border border-[var(--color-line-strong)] bg-white px-3 py-2 text-sm focus:border-[var(--color-accent)] outline-none" minlength="8" />
+      </div>
+      <div class="flex items-center gap-3">
+        <button type="submit" class="btn btn-primary">Set password</button>
+        <span id="password-status" class="text-sm"></span>
+      </div>
+    </form>
+  </div>
+
+  <!-- Danger zone -->
+  <div class="mt-6 border border-red-200 bg-red-50 p-6">
+    <h2 class="font-display text-sm font-bold text-red-700">Danger zone</h2>
+    <div class="mt-4 flex items-center gap-4">
+      <button id="signout-btn" class="border border-red-300 bg-white px-4 py-2 text-sm text-red-700 hover:bg-red-100">Sign out everywhere</button>
+      <button id="delete-btn" class="border border-red-500 bg-red-500 px-4 py-2 text-sm text-white hover:bg-red-600">Delete account</button>
+    </div>
+  </div>
+</PortalLayout>
+
+<script>
+  import { getSession, signOut } from '../../lib/auth-client';
+
+  (async () => {
+    const user = await getSession();
+    if (!user) return;
+
+    const info = document.getElementById('account-info')!;
+    info.innerHTML = `
+      <div class="grid grid-cols-2 gap-4 text-sm">
+        <div><span class="mono text-xs text-[var(--color-faint)]">EMAIL</span><p>${user.email}</p></div>
+        <div><span class="mono text-xs text-[var(--color-faint)]">ROLE</span><p class="capitalize">${user.role}</p></div>
+        <div><span class="mono text-xs text-[var(--color-faint)]">STATUS</span><p class="capitalize">${user.status || 'active'}</p></div>
+        <div><span class="mono text-xs text-[var(--color-faint)]">COUNTRY</span><p>${user.country || '—'}</p></div>
+      </div>
+    `;
+
+    const nameInput = document.getElementById('settings-name') as HTMLInputElement;
+    nameInput.value = user.name || '';
+
+    // Name form
+    document.getElementById('name-form')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const statusEl = document.getElementById('name-status')!;
+      const name = nameInput.value.trim();
+      if (!name) { statusEl.textContent = 'Name required'; statusEl.className = 'self-center text-sm text-red-600'; return; }
+
+      try {
+        const res = await fetch('/api/account/profile', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name }),
+        });
+        if (res.ok) {
+          statusEl.textContent = 'Saved ✓';
+          statusEl.className = 'self-center text-sm text-green-600';
+        } else {
+          statusEl.textContent = 'Failed';
+          statusEl.className = 'self-center text-sm text-red-600';
+        }
+      } catch {
+        statusEl.textContent = 'Error';
+        statusEl.className = 'self-center text-sm text-red-600';
+      }
+    });
+
+    // Check if password is set
+    try {
+      const res = await fetch('/api/auth/get-session', { credentials: 'include' });
+      const data = await res.json();
+      // Check if account has password
+      const accounts = data.user?.accounts || [];
+      const hasPassword = Array.isArray(accounts) && accounts.some((a: Record<string, unknown>) => a.providerId === 'credential');
+
+      const pwState = document.getElementById('password-state')!;
+      const pwForm = document.getElementById('password-form')!;
+
+      if (hasPassword) {
+        pwState.textContent = 'Password is set. Use the form below to change it.';
+        pwState.className = 'mt-2 text-sm text-green-600';
+      } else {
+        pwState.textContent = 'No password set. Set one below to enable email + password login.';
+        pwState.className = 'mt-2 text-sm text-amber-600';
+      }
+      pwForm.classList.remove('hidden');
+    } catch {
+      // If we can't check, just show the form
+      document.getElementById('password-form')?.classList.remove('hidden');
+      document.getElementById('password-state')!.textContent = 'Set a password for your account.';
+    }
+
+    // Password form
+    document.getElementById('password-form')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const statusEl = document.getElementById('password-status')!;
+      const pw = (document.getElementById('new-password') as HTMLInputElement).value;
+      const confirm = (document.getElementById('confirm-password') as HTMLInputElement).value;
+
+      if (pw.length < 8) { statusEl.textContent = 'Min 8 characters'; statusEl.className = 'text-sm text-red-600'; return; }
+      if (pw !== confirm) { statusEl.textContent = 'Passwords do not match'; statusEl.className = 'text-sm text-red-600'; return; }
+
+      statusEl.textContent = 'Setting…';
+      statusEl.className = 'text-sm text-[var(--color-faint)]';
+
+      try {
+        const res = await fetch('/api/auth/set-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ newPassword: pw }),
+          credentials: 'include',
+        });
+        if (res.ok) {
+          statusEl.textContent = 'Password set ✓';
+          statusEl.className = 'text-sm text-green-600';
+        } else {
+          const data = await res.json().catch(() => ({}));
+          statusEl.textContent = data.message || data.error || 'Failed';
+          statusEl.className = 'text-sm text-red-600';
+        }
+      } catch {
+        statusEl.textContent = 'Error';
+        statusEl.className = 'text-sm text-red-600';
+      }
+    });
+
+    // Danger zone
+    document.getElementById('signout-btn')?.addEventListener('click', () => signOut());
+    document.getElementById('delete-btn')?.addEventListener('click', async () => {
+      if (!confirm('Are you sure? This permanently deletes your account and all data.')) return;
+      try {
+        const res = await fetch('/api/auth/delete-user', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: '{}',
+          credentials: 'include',
+        });
+        if (res.ok) {
+          window.location.href = '/';
+        } else {
+          alert('Failed to delete account. Contact support.');
+        }
+      } catch {
+        alert('Error. Try again or contact support.');
+      }
+    });
+  })();
+</script>

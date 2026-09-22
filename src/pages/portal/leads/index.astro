@@ -1,0 +1,96 @@
+---
+import PortalLayout from '../../../components/PortalLayout.astro';
+
+const title = 'Portal — Leads | European Scrap Market';
+const description = 'Manage incoming scrap requests and bids.';
+---
+
+<PortalLayout {title} {description} active="leads">
+  <h1 class="font-display text-2xl font-bold text-[var(--color-ink)]">Leads</h1>
+  <p class="mt-1 text-sm text-[var(--color-faint)]">Scrap requests from sellers across Europe.</p>
+
+  <!-- Tabs -->
+  <div id="leads-tabs" class="mt-6 flex flex-wrap gap-2">
+    <button data-status="new" class="tab-btn px-4 py-2 text-sm border border-[var(--color-accent)] bg-[var(--color-accent)] text-white">New</button>
+    <button data-status="bidding" class="tab-btn px-4 py-2 text-sm border border-[var(--color-line)] bg-white text-[var(--color-ink)] hover:border-[var(--color-accent)]">My bids</button>
+    <button data-status="won" class="tab-btn px-4 py-2 text-sm border border-[var(--color-line)] bg-white text-[var(--color-ink)] hover:border-[var(--color-accent)]">Won</button>
+    <button data-status="completed" class="tab-btn px-4 py-2 text-sm border border-[var(--color-line)] bg-white text-[var(--color-ink)] hover:border-[var(--color-accent)]">Completed</button>
+    <button data-status="all" class="tab-btn px-4 py-2 text-sm border border-[var(--color-line)] bg-white text-[var(--color-ink)] hover:border-[var(--color-accent)]">All</button>
+  </div>
+
+  <!-- Leads list -->
+  <div id="leads-list" class="mt-6 space-y-3">
+    <p class="text-sm text-[var(--color-faint)]">Loading…</p>
+  </div>
+</PortalLayout>
+
+<script>
+  let currentStatus = 'new';
+
+  async function loadLeads(status: string) {
+    const container = document.getElementById('leads-list')!;
+    container.innerHTML = '<p class="text-sm text-[var(--color-faint)]">Loading…</p>';
+
+    try {
+      const res = await fetch(`/api/portal/leads?status=${status}`);
+      if (!res.ok) throw new Error('Failed to load');
+      const data = await res.json();
+      const leads = data.leads || [];
+
+      if (leads.length === 0) {
+        container.innerHTML = '<p class="text-sm text-[var(--color-faint)]">No leads in this category.</p>';
+        return;
+      }
+
+      container.innerHTML = leads.map((lead: Record<string, unknown>) => {
+        const scrapClass = String(lead.scrap_class || 'unknown').replace(/\b\w/g, c => c.toUpperCase());
+        const weight = lead.weight_kg ? `${lead.weight_kg} kg` : 'Weight unknown';
+        const country = String(lead.country || '');
+        const city = lead.city ? ` · ${lead.city}` : '';
+        const statusBadge = lead.status ? `<span class="mono text-[10px] uppercase ${lead.status === 'new' ? 'text-green-600' : lead.status === 'bidding' ? 'text-amber-600' : lead.status === 'completed' ? 'text-[var(--color-faint)]' : 'text-[var(--color-faint)]'}">${lead.status}</span>` : '';
+        const bidInfo = lead.bid_count != null ? `<span class="text-xs text-[var(--color-faint)]">${lead.bid_count} bid(s)</span>` : '';
+        const priceInfo = lead.price_eur ? `<span class="text-sm font-medium text-[var(--color-accent)]">€${lead.price_eur}</span>` : lead.price_per_kg ? `<span class="text-sm font-medium text-[var(--color-accent)]">€${lead.price_per_kg}/kg</span>` : '';
+
+        return `
+          <a href="/portal/leads/${lead.id}" class="block border border-[var(--color-line)] bg-white p-4 hover:border-[var(--color-accent)] transition-colors">
+            <div class="flex items-center justify-between gap-4">
+              <div class="min-w-0 flex-1">
+                <div class="flex items-center gap-2">
+                  <p class="text-sm font-medium text-[var(--color-ink)] truncate">${scrapClass}</p>
+                  ${statusBadge}
+                </div>
+                <p class="text-xs text-[var(--color-faint)] mt-1">${weight} · ${country}${city}</p>
+                ${lead.description ? `<p class="text-xs text-[var(--color-faint)] mt-1 truncate">${String(lead.description).slice(0, 120)}${String(lead.description).length > 120 ? '…' : ''}</p>` : ''}
+              </div>
+              <div class="shrink-0 text-right">
+                ${priceInfo}
+                <p class="mono text-[10px] text-[var(--color-faint)] mt-1">${String(lead.created_at || '').slice(0, 10)}</p>
+                ${bidInfo}
+              </div>
+            </div>
+          </a>
+        `;
+      }).join('');
+    } catch {
+      container.innerHTML = '<p class="text-sm text-red-600">Failed to load leads. Try again.</p>';
+    }
+  }
+
+  // Tab switching
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const status = btn.getAttribute('data-status')!;
+      currentStatus = status;
+
+      // Update active tab styling
+      document.querySelectorAll('.tab-btn').forEach(b => {
+        b.className = 'tab-btn px-4 py-2 text-sm border border-[var(--color-line)] bg-white text-[var(--color-ink)] hover:border-[var(--color-accent)]';
+      });
+      btn.className = 'tab-btn px-4 py-2 text-sm border border-[var(--color-accent)] bg-[var(--color-accent)] text-white';
+
+      loadLeads(status);
+    });
+  });
+
+  loadLeads('new');
+</script>

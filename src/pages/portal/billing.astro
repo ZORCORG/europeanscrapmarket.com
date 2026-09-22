@@ -1,0 +1,121 @@
+---
+import PortalLayout from '../../components/PortalLayout.astro';
+
+const title = 'Portal — Billing | European Scrap Market';
+const description = 'Subscription and billing.';
+
+const plans = [
+  { id: 'free', name: 'Free', price: 0, desc: 'Browse leads, place bids', features: ['See all new leads', 'Place unlimited bids', 'Chat with sellers', '1 zone included'] },
+  { id: 'pro', name: 'Pro', price: 14.90, desc: 'Priority bids + branding', features: ['Everything in Free', 'Priority bid flag', 'Yard logo on profile', 'Featured in marketplace'] },
+  { id: 'zones', name: 'Zones', price: 14.90, perZone: true, desc: 'Exclusive regional rights', features: ['Everything in Pro', 'Lock zones exclusively', 'First-move on leads in your zones', '€14.90 per zone / month'] },
+];
+---
+
+<PortalLayout {title} {description} active="billing">
+  <h1 class="font-display text-2xl font-bold text-[var(--color-ink)]">Billing</h1>
+  <p class="mt-1 text-sm text-[var(--color-faint)]">Manage your subscription and zones.</p>
+
+  <!-- Current plan -->
+  <div id="current-plan" class="mt-6 border border-[var(--color-line)] bg-white p-6">
+    <p class="text-sm text-[var(--color-faint)]">Loading…</p>
+  </div>
+
+  <!-- Plans -->
+  <div class="mt-8">
+    <h2 class="font-display text-lg font-bold text-[var(--color-ink)]">Plans</h2>
+    <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
+      {plans.map(p => (
+        <div class="border border-[var(--color-line)] bg-white p-6 flex flex-col">
+          <div>
+            <h3 class="font-display text-lg font-bold text-[var(--color-ink)]">{p.name}</h3>
+            <p class="mt-1 text-sm text-[var(--color-faint)]">{p.desc}</p>
+          </div>
+          <p class="mt-4 font-display text-2xl font-bold text-[var(--color-ink)]">
+            €{p.price.toFixed(2)}{p.perZone ? '/zone' : ''}<span class="text-sm font-normal text-[var(--color-faint)]">/mo</span>
+          </p>
+          <ul class="mt-4 flex-1 space-y-2">
+            {p.features.map(f => <li class="flex items-start gap-2 text-sm text-[var(--color-ink)]"><span class="text-[var(--color-accent)]">✓</span> {f}</li>)}
+          </ul>
+          <button class="plan-btn btn btn-primary mt-6" data-plan={p.id}>Select {p.name}</button>
+        </div>
+      ))}
+    </div>
+  </div>
+
+  <!-- Billing cycle -->
+  <div class="mt-8 border border-[var(--color-line)] bg-white p-6">
+    <h2 class="font-display text-sm font-bold text-[var(--color-ink)]">Billing cycle</h2>
+    <div class="mt-3 flex gap-4">
+      <label class="flex items-center gap-2 text-sm">
+        <input type="radio" name="cycle" value="monthly" class="accent-[var(--color-accent)]" checked /> Monthly
+      </label>
+      <label class="flex items-center gap-2 text-sm">
+        <input type="radio" name="cycle" value="quarterly" class="accent-[var(--color-accent)]" /> Quarterly (3 months upfront)
+      </label>
+    </div>
+  </div>
+
+  <p class="mt-4 mono text-xs text-[var(--color-faint)]">
+    This is a demo billing interface. No real payments are processed. To activate a plan, contact us at hello@europeanscrapmarket.com.
+  </p>
+</PortalLayout>
+
+<script>
+  (async () => {
+    const container = document.getElementById('current-plan')!;
+
+    async function loadBilling() {
+      try {
+        const res = await fetch('/api/portal/billing');
+        if (!res.ok) return;
+        const data = await res.json();
+        const sub = data.subscription || {};
+        const plans = data.plans || {};
+        const planLabel = plans[sub.plan]?.label || sub.plan || 'Free';
+        const monthlyTotal = data.monthlyTotal || 0;
+
+        container.innerHTML = `
+          <div class="grid grid-cols-2 gap-6 sm:grid-cols-4">
+            <div>
+              <p class="mono text-xs text-[var(--color-faint)]">CURRENT PLAN</p>
+              <p class="mt-1 font-display text-lg font-bold text-[var(--color-ink)]">${planLabel}</p>
+            </div>
+            <div>
+              <p class="mono text-xs text-[var(--color-faint)]">BILLING CYCLE</p>
+              <p class="mt-1 text-sm text-[var(--color-ink)] capitalize">${sub.billing_cycle || 'monthly'}</p>
+            </div>
+            <div>
+              <p class="mono text-xs text-[var(--color-faint)]">ZONES LOCKED</p>
+              <p class="mt-1 font-display text-lg font-bold text-[var(--color-ink)]">${data.zonesCount || 0}</p>
+            </div>
+            <div>
+              <p class="mono text-xs text-[var(--color-faint)]">MONTHLY TOTAL</p>
+              <p class="mt-1 font-display text-lg font-bold text-[var(--color-accent)]">€${monthlyTotal.toFixed(2)}</p>
+            </div>
+          </div>
+          ${sub.current_period_end ? `<p class="mt-4 mono text-xs text-[var(--color-faint)]">Current period ends: ${String(sub.current_period_end).slice(0, 10)}</p>` : ''}
+        `;
+      } catch {}
+    }
+
+    document.querySelectorAll('.plan-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const plan = btn.getAttribute('data-plan')!;
+        const cycle = (document.querySelector('input[name="cycle"]:checked') as HTMLInputElement)?.value || 'monthly';
+
+        try {
+          const res = await fetch('/api/portal/billing', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ plan, billingCycle: cycle }),
+          });
+          if (res.ok) {
+            loadBilling();
+          }
+        } catch {}
+      });
+    });
+
+    loadBilling();
+  })();
+</script>

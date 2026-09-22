@@ -1,0 +1,183 @@
+---
+import PortalLayout from '../../components/PortalLayout.astro';
+import { countries } from '../../data/countries';
+
+const title = 'Portal — Zones | European Scrap Market';
+const description = 'Manage your geographic zones.';
+
+const countryList = countries.map(c => ({ slug: c.slug, name: c.name }));
+---
+
+<PortalLayout {title} {description} active="zones">
+  <h1 class="font-display text-2xl font-bold text-[var(--color-ink)]">Zones</h1>
+  <p class="mt-1 text-sm text-[var(--color-faint)]">Lock regions for exclusive first-move rights on leads. €14.90/month per zone.</p>
+
+  <!-- Your locked zones -->
+  <div class="mt-6">
+    <h2 class="font-display text-sm font-bold text-[var(--color-ink)]">Your locked zones</h2>
+    <div id="my-zones" class="mt-3 space-y-2">
+      <p class="text-sm text-[var(--color-faint)]">Loading…</p>
+    </div>
+  </div>
+
+  <!-- Lock a new zone -->
+  <div class="mt-8 border border-[var(--color-line)] bg-white p-6">
+    <h2 class="font-display text-sm font-bold text-[var(--color-ink)]">Lock a new zone</h2>
+    <div class="mt-4 grid grid-cols-2 gap-4">
+      <div>
+        <label class="mono text-xs text-[var(--color-faint)]">COUNTRY</label>
+        <select id="zone-country" class="mt-1 w-full border border-[var(--color-line-strong)] bg-white px-3 py-2 text-sm focus:border-[var(--color-accent)] outline-none">
+          <option value="">Select country…</option>
+          {countryList.map(c => <option value={c.slug}>{c.name}</option>)}
+        </select>
+      </div>
+      <div>
+        <label class="mono text-xs text-[var(--color-faint)]">REGION</label>
+        <input type="text" id="zone-region" class="mt-1 w-full border border-[var(--color-line-strong)] bg-white px-3 py-2 text-sm focus:border-[var(--color-accent)] outline-none" placeholder="e.g. Bavaria, Île-de-France" />
+      </div>
+    </div>
+    <div class="mt-4 flex items-center gap-4">
+      <button id="lock-zone-btn" class="btn btn-primary">Lock zone</button>
+      <span id="zone-status" class="text-sm"></span>
+    </div>
+  </div>
+
+  <!-- Browse zones by country -->
+  <div class="mt-8">
+    <h2 class="font-display text-sm font-bold text-[var(--color-ink)]">Browse available zones</h2>
+    <select id="browse-country" class="mt-3 w-full sm:w-64 border border-[var(--color-line-strong)] bg-white px-3 py-2 text-sm focus:border-[var(--color-accent)] outline-none">
+      <option value="">Select country to browse…</option>
+      {countryList.map(c => <option value={c.slug}>{c.name}</option>)}
+    </select>
+    <div id="zone-list" class="mt-4 space-y-2"></div>
+  </div>
+</PortalLayout>
+
+<script is:inline>
+  async function loadMyZones() {
+    const container = document.getElementById('my-zones')!;
+    try {
+      const res = await fetch('/api/portal/zones');
+      if (!res.ok) return;
+      const data = await res.json();
+      const myZones = (data.zones || []).filter((z: Record<string, unknown>) => z.isMine);
+
+      if (myZones.length === 0) {
+        container.innerHTML = '<p class="text-sm text-[var(--color-faint)]">No zones locked yet.</p>';
+        return;
+      }
+
+      container.innerHTML = myZones.map((z: Record<string, unknown>) => `
+        <div class="flex items-center justify-between border border-[var(--color-line)] bg-white p-3">
+          <div>
+            <p class="text-sm font-medium text-[var(--color-ink)]">${z.country} · ${z.region}</p>
+            <p class="mono text-[10px] text-[var(--color-faint)]">€${z.price_monthly}/mo · Locked ${String(z.locked_at || '').slice(0,10)}</p>
+          </div>
+          <button class="unlock-btn text-sm text-red-600 hover:underline" data-country="${z.country}" data-region="${z.region}">Unlock</button>
+        </div>
+      `).join('');
+
+      container.querySelectorAll('.unlock-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          await fetch('/api/portal/zones', {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              country: btn.getAttribute('data-country'),
+              region: btn.getAttribute('data-region'),
+            }),
+          });
+          loadMyZones();
+        });
+      });
+    } catch {}
+  }
+
+  document.getElementById('lock-zone-btn')?.addEventListener('click', async () => {
+    const country = (document.getElementById('zone-country') as HTMLSelectElement).value;
+    const region = (document.getElementById('zone-region') as HTMLInputElement).value.trim();
+    const statusEl = document.getElementById('zone-status')!;
+
+    if (!country || !region) {
+      statusEl.textContent = 'Select country and region';
+      statusEl.className = 'text-sm text-red-600';
+      return;
+    }
+
+    statusEl.textContent = 'Locking…';
+    statusEl.className = 'text-sm text-[var(--color-faint)]';
+
+    try {
+      const res = await fetch('/api/portal/zones', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ country, region }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        statusEl.textContent = 'Zone locked ✓';
+        statusEl.className = 'text-sm text-green-600';
+        (document.getElementById('zone-region') as HTMLInputElement).value = '';
+        loadMyZones();
+      } else {
+        statusEl.textContent = data.error || 'Failed';
+        statusEl.className = 'text-sm text-red-600';
+      }
+    } catch {
+      statusEl.textContent = 'Error';
+      statusEl.className = 'text-sm text-red-600';
+    }
+  });
+
+  document.getElementById('browse-country')?.addEventListener('change', async (e) => {
+    const country = (e.target as HTMLSelectElement).value;
+    const list = document.getElementById('zone-list')!;
+
+    if (!country) {
+      list.innerHTML = '';
+      return;
+    }
+
+    list.innerHTML = '<p class="text-sm text-[var(--color-faint)]">Loading…</p>';
+
+    try {
+      const res = await fetch(`/api/portal/zones?country=${country}`);
+      if (!res.ok) return;
+      const data = await res.json();
+      const zones = data.zones || [];
+
+      if (zones.length === 0) {
+        list.innerHTML = '<p class="text-sm text-[var(--color-faint)]">No zones registered for this country yet.</p>';
+        return;
+      }
+
+      list.innerHTML = zones.map((z: Record<string, unknown>) => `
+        <div class="flex items-center justify-between border border-[var(--color-line)] bg-white p-3">
+          <div>
+            <p class="text-sm text-[var(--color-ink)]">${z.region}</p>
+            <p class="mono text-[10px] text-[var(--color-faint)]">${z.partner_id ? (z.isMine ? 'Your zone' : 'Locked by another partner') : 'Available · €' + z.price_monthly + '/mo'}</p>
+          </div>
+          ${!z.partner_id ? `<button class="browse-lock-btn text-sm text-[var(--color-accent)] hover:underline" data-country="${z.country}" data-region="${z.region}">Lock</button>` : ''}
+        </div>
+      `).join('');
+
+      list.querySelectorAll('.browse-lock-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const c = btn.getAttribute('data-country')!;
+          const r = btn.getAttribute('data-region')!;
+          const res = await fetch('/api/portal/zones', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ country: c, region: r }),
+          });
+          if (res.ok) {
+            loadMyZones();
+            (document.getElementById('browse-country') as HTMLSelectElement).dispatchEvent(new Event('change'));
+          }
+        });
+      });
+    } catch {}
+  });
+
+  loadMyZones();
+</script>
