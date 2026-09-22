@@ -1,0 +1,13 @@
+name = "esm-proxy"
+main = "src/index.ts"
+compatibility_date = "2024-12-01"
+account_id = "d11b4f692d7cb931914b8ad0e787a32a"
+
+# Worker routes — no DNS changes needed, uses existing proxied records
+[[routes]]
+pattern = "europeanscrapmarket.com/*"
+zone_id = "33ebcaf3dfdd920c4299fc9a9222ab16"
+
+[[routes]]
+pattern = "www.europeanscrapmarket.com/*"
+zone_id = "33ebcaf3dfdd920c4299fc9a9222ab16"
