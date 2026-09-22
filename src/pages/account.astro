@@ -7,17 +7,20 @@ const description = 'Manage your account, profile and listings.';
 ---
 
 <Layout {title} {description} noindex={true}>
-  <div id="auth-check" class="mx-auto max-w-3xl px-5 py-12">
+  <div id="auth-check" class="mx-auto max-w-4xl px-5 py-12">
     <div class="text-center">
       <div class="inline-block animate-spin h-8 w-8 border-2 border-[var(--color-accent)] border-t-transparent rounded-full"></div>
       <p class="mt-3 text-sm text-[var(--color-faint)]">Loading your account…</p>
     </div>
   </div>
 
-  <div id="account-content" class="hidden mx-auto max-w-3xl px-5 py-12">
+  <div id="account-content" class="hidden mx-auto max-w-4xl px-5 py-12">
     <div class="flex items-center justify-between">
       <h1 class="font-display text-2xl font-bold text-[var(--color-ink)]">My account</h1>
-      <button id="signout-btn" class="text-sm text-[var(--color-accent)] hover:underline">Sign out</button>
+      <div class="flex items-center gap-4">
+        <a id="portal-link" href="/portal" class="hidden text-sm text-[var(--color-accent)] hover:underline">Partner portal →</a>
+        <button id="signout-btn" class="text-sm text-[var(--color-accent)] hover:underline">Sign out</button>
+      </div>
     </div>
 
     <!-- Profile section -->
@@ -54,26 +57,44 @@ const description = 'Manage your account, profile and listings.';
       </form>
     </div>
 
-    <!-- Role-specific sections -->
-    <div id="partner-section" class="mt-6 hidden border border-[var(--color-line)] bg-white p-6">
-      <h2 class="mono text-xs text-[var(--color-faint)]">PARTNER DASHBOARD</h2>
-      <p class="mt-3 text-sm">You are registered as a partner. Your leads and listings appear here.</p>
-      <div id="partner-stats" class="mt-4 grid grid-cols-2 gap-4"></div>
+    <!-- My leads section -->
+    <div class="mt-6 border border-[var(--color-line)] bg-white p-6">
+      <div class="flex items-center justify-between">
+        <h2 class="mono text-xs text-[var(--color-faint)]">MY SCRAP REQUESTS</h2>
+        <a href="/submit/" class="text-sm text-[var(--color-accent)] hover:underline">+ New request</a>
+      </div>
+      <div id="my-leads" class="mt-4">
+        <p class="text-sm text-[var(--color-faint)]">Loading…</p>
+      </div>
     </div>
 
+    <!-- Admin section -->
     <div id="admin-section" class="mt-6 hidden border border-[var(--color-accent)] bg-[var(--color-bg)] p-6">
       <h2 class="mono text-xs text-[var(--color-accent)]">ADMIN ACCESS</h2>
       <p class="mt-3 text-sm">You have admin privileges.</p>
       <a href="/admin" class="btn btn-primary mt-4 inline-block">Open admin panel</a>
     </div>
   </div>
-</Layout>
+
+  <!-- Bid accept modal -->
+  <div id="accept-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+    <div class="max-w-md w-full bg-white border border-[var(--color-line)] p-6">
+      <h3 class="font-display text-lg font-bold">Accept bid?</h3>
+      <p id="accept-modal-text" class="mt-2 text-sm text-[var(--color-muted)]"></p>
+      <div class="mt-4 flex gap-3">
+        <button id="accept-confirm" class="btn btn-accent">Accept</button>
+        <button id="accept-cancel" class="border border-[var(--color-line-strong)] px-4 py-2 text-sm hover:bg-[var(--color-bg)]">Cancel</button>
+      </div>
+    </div>
+  </div>
 
 <script>
   import { getSession, signOut } from '../lib/auth-client';
 
   const authCheck = document.getElementById('auth-check')!;
   const content = document.getElementById('account-content')!;
+
+  let pendingAccept: { leadId: string; bidId: string } | null = null;
 
   (async () => {
     const user = await getSession();
@@ -85,23 +106,27 @@ const description = 'Manage your account, profile and listings.';
     authCheck.classList.add('hidden');
     content.classList.remove('hidden');
 
-    // Load profile
-    const res = await fetch('/api/account/profile');
-    const data = await res.json();
-    const p = data.profile;
-    (document.getElementById('name') as HTMLInputElement).value = p?.name || '';
-    (document.getElementById('email') as HTMLInputElement).value = p?.email || '';
-    (document.getElementById('company') as HTMLInputElement).value = p?.company || '';
-    (document.getElementById('phone') as HTMLInputElement).value = p?.phone || '';
-    (document.getElementById('country') as HTMLSelectElement).value = p?.country || '';
-
-    // Show role-specific sections
+    // Show portal link for partners/admins
     if (user.role === 'partner' || user.role === 'admin') {
-      document.getElementById('partner-section')?.classList.remove('hidden');
+      document.getElementById('portal-link')?.classList.remove('hidden');
     }
+
+    // Show admin section
     if (user.role === 'admin') {
       document.getElementById('admin-section')?.classList.remove('hidden');
     }
+
+    // Load profile
+    try {
+      const res = await fetch('/api/account/profile');
+      const data = await res.json();
+      const p = data.profile;
+      (document.getElementById('name') as HTMLInputElement).value = p?.name || '';
+      (document.getElementById('email') as HTMLInputElement).value = p?.email || '';
+      (document.getElementById('company') as HTMLInputElement).value = p?.company || '';
+      (document.getElementById('phone') as HTMLInputElement).value = p?.phone || '';
+      (document.getElementById('country') as HTMLSelectElement).value = p?.country || '';
+    } catch {}
 
     // Profile save
     document.getElementById('profile-form')?.addEventListener('submit', async (e) => {
@@ -123,5 +148,150 @@ const description = 'Manage your account, profile and listings.';
 
     // Sign out
     document.getElementById('signout-btn')?.addEventListener('click', () => signOut());
+
+    // Load my leads
+    await loadMyLeads();
+
+    // Accept bid modal
+    document.getElementById('accept-cancel')?.addEventListener('click', () => {
+      document.getElementById('accept-modal')!.classList.add('hidden');
+      pendingAccept = null;
+    });
+
+    document.getElementById('accept-confirm')?.addEventListener('click', async () => {
+      if (!pendingAccept) return;
+      const btn = document.getElementById('accept-confirm') as HTMLButtonElement;
+      btn.disabled = true;
+      btn.textContent = 'Accepting…';
+
+      try {
+        const res = await fetch(`/api/portal/leads/${pendingAccept.leadId}/accept-bid`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ bidId: pendingAccept.bidId }),
+          credentials: 'include',
+        });
+        const result = await res.json();
+        if (res.ok) {
+          document.getElementById('accept-modal')!.classList.add('hidden');
+          pendingAccept = null;
+          await loadMyLeads();
+        } else {
+          alert(result.error || 'Failed to accept bid');
+        }
+      } catch {
+        alert('Error accepting bid');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Accept';
+      }
+    });
   })();
+
+  async function loadMyLeads() {
+    const container = document.getElementById('my-leads')!;
+    try {
+      const res = await fetch('/api/my-leads', { credentials: 'include' });
+      const data = await res.json();
+      const leads = data.leads || [];
+
+      if (!leads.length) {
+        container.innerHTML = '<p class="text-sm text-[var(--color-faint)]">You have not submitted any scrap requests yet. <a href="/submit/" class="text-[var(--color-accent)] hover:underline">Submit your scrap →</a></p>';
+        return;
+      }
+
+      container.innerHTML = leads.map((lead: any) => {
+        const bids = lead.bids || [];
+        const status = lead.status || 'new';
+        const acceptedBid = bids.find((b: any) => b.status === 'accepted');
+
+        let statusColor = 'text-[var(--color-faint)]';
+        if (status === 'new') statusColor = 'text-[var(--color-accent)]';
+        if (status === 'bidding') statusColor = 'text-amber-600';
+        if (status === 'won') statusColor = 'text-green-600';
+        if (status === 'completed') statusColor = 'text-green-700';
+
+        let bidsHtml = '';
+        if (acceptedBid) {
+          // Show accepted bid with partner contact info
+          bidsHtml = `
+            <div class="mt-3 border border-green-200 bg-green-50 p-4">
+              <p class="text-sm font-bold text-green-800">✓ Accepted: ${acceptedBid.partner_company || acceptedBid.partner_name || 'Partner'}</p>
+              <p class="mt-1 text-sm text-green-700">${formatBidPrice(acceptedBid)}</p>
+              ${acceptedBid.message ? `<p class="mt-2 text-sm text-green-700">"${acceptedBid.message}"</p>` : ''}
+              <div class="mt-3 border-t border-green-200 pt-3">
+                <p class="mono text-xs text-green-600">CONTACT</p>
+                <p class="mt-1 text-sm">${acceptedBid.partner_name || '—'}</p>
+                <p class="text-sm text-[var(--color-muted)]">${acceptedBid.partner_company || ''}</p>
+                <a href="/portal/leads/${lead.id}" class="mt-2 inline-block text-sm text-[var(--color-accent)] hover:underline">Open chat →</a>
+              </div>
+            </div>
+          `;
+        } else if (bids.length > 0) {
+          // Show all bids with accept buttons
+          bidsHtml = `
+            <div class="mt-3 space-y-2">
+              <p class="mono text-xs text-[var(--color-faint)]">${bids.length} BID${bids.length > 1 ? 'S' : ''}</p>
+              ${bids.map((bid: any) => `
+                <div class="border border-[var(--color-line)] p-3 ${bid.status === 'rejected' ? 'opacity-50' : ''}">
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <p class="text-sm font-medium">${bid.partner_company || bid.partner_name || 'Partner'}</p>
+                      <p class="text-sm text-[var(--color-accent)] font-bold">${formatBidPrice(bid)}</p>
+                      ${bid.message ? `<p class="mt-1 text-xs text-[var(--color-muted)]">"${bid.message}"</p>` : ''}
+                    </div>
+                    ${bid.status === 'pending' ? `<button data-lead-id="${lead.id}" data-bid-id="${bid.id}" class="accept-bid-btn btn btn-accent text-xs">Accept</button>` : bid.status === 'rejected' ? '<span class="text-xs text-[var(--color-faint)]">Rejected</span>' : ''}
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          `;
+        } else if (status === 'new') {
+          bidsHtml = '<p class="mt-3 text-sm text-[var(--color-faint)]">Waiting for yards to bid on your request…</p>';
+        }
+
+        return `
+          <div class="border border-[var(--color-line)] p-4 mb-3">
+            <div class="flex items-start justify-between">
+              <div>
+                <p class="text-sm font-medium">${lead.scrap_class || 'Mixed scrap'} · ${lead.weight_kg ? lead.weight_kg.toLocaleString() + ' kg' : 'Weight not specified'}</p>
+                <p class="text-xs text-[var(--color-faint)]">${lead.country || '—'} · ${new Date(lead.created_at).toLocaleDateString('en-GB')}</p>
+                ${lead.description ? `<p class="mt-1 text-xs text-[var(--color-muted)]">${lead.description}</p>` : ''}
+              </div>
+              <span class="text-xs font-bold uppercase ${statusColor}">${status}</span>
+            </div>
+            ${bidsHtml}
+          </div>
+        `;
+      }).join('');
+
+      // Attach accept bid handlers
+      container.querySelectorAll('.accept-bid-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const el = e.target as HTMLElement;
+          const leadId = el.dataset.leadId!;
+          const bidId = el.dataset.bidId!;
+          pendingAccept = { leadId, bidId };
+
+          const modal = document.getElementById('accept-modal')!;
+          const text = document.getElementById('accept-modal-text')!;
+          text.textContent = 'Once accepted, the yard gets your contact details and other bids are rejected. You can chat with the yard through the portal.';
+          modal.classList.remove('hidden');
+        });
+      });
+    } catch {
+      container.innerHTML = '<p class="text-sm text-[var(--color-faint)]">Unable to load your requests. Try refreshing the page.</p>';
+    }
+  }
+
+  function formatBidPrice(bid: any): string {
+    if (bid.price_total) {
+      return `€${Number(bid.price_total).toFixed(2)} total`;
+    }
+    if (bid.price_per_kg) {
+      return `€${Number(bid.price_per_kg).toFixed(2)}/kg`;
+    }
+    return 'Price not specified';
+  }
 </script>
+</Layout>

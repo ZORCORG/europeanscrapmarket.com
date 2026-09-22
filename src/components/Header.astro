@@ -47,6 +47,7 @@ const rest = countries.filter(c => !majorMarkets.includes(c.slug));
       <a href="/trust/" class="hidden text-white/70 hover:text-white sm:block">Trust & verification</a>
       <a href="/login" id="header-login" class="hidden text-white/70 hover:text-white">Sign in</a>
       <a href="/account" id="header-account" class="hidden text-white/70 hover:text-white">Account</a>
+      <a href="/portal" id="header-portal" class="hidden text-white/70 hover:text-white">Portal</a>
       <button id="header-signout" class="hidden text-white/70 hover:text-white">Sign out</button>
     </div>
   </div>
@@ -133,6 +134,7 @@ const rest = countries.filter(c => !majorMarkets.includes(c.slug));
   (function () {
     const login = document.getElementById('header-login');
     const account = document.getElementById('header-account');
+    const portal = document.getElementById('header-portal');
     const signout = document.getElementById('header-signout');
     if (!login || !account || !signout) return;
     fetch('/api/auth/get-session').then(r => r.json()).then(function (data) {
@@ -142,7 +144,10 @@ const rest = countries.filter(c => !majorMarkets.includes(c.slug));
         account.textContent = data.user.name || data.user.email;
         if (data.user.role === 'admin') {
           account.href = '/admin';
-          account.textContent = 'Admin panel';
+          account.textContent = 'Admin';
+        }
+        if (data.user.role === 'partner' || data.user.role === 'admin') {
+          if (portal) portal.classList.remove('hidden');
         }
         signout.addEventListener('click', function () {
           fetch('/api/auth/sign-out', {

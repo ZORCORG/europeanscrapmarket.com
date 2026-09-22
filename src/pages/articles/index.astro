@@ -1,17 +1,6 @@
 ---
 import Layout from '../../layouts/Layout.astro';
-
-const articles = [
-  { slug: 'choosing-a-scrap-dealer-how-to-compare', title: 'Choosing a scrap dealer — how to compare', excerpt: 'What to look for when comparing scrap yards: price, service, documentation, and trust signals.', date: '2025-01-15' },
-  { slug: 'get-the-best-price-for-your-scrap', title: 'Get the best price for your scrap', excerpt: 'How sorting, cleaning, and volume affect the price you get. Practical tips for sellers.', date: '2025-01-10' },
-  { slug: 'selling-scrap-as-a-private-individual', title: 'Selling scrap as a private individual', excerpt: 'Everything you need to know about selling metal scrap as a person, not a business.', date: '2025-01-05' },
-  { slug: 'selling-scrap-as-a-business', title: 'Selling scrap as a business', excerpt: 'For industrial, construction, and engineering companies — production scrap, decommissioning, and containers.', date: '2024-12-20' },
-  { slug: 'safe-scrap-deals-payments-and-verification', title: 'Safe scrap deals — payments and verification', excerpt: 'How to protect yourself when selling scrap. Traceable payment, ID checks, and documentation.', date: '2024-12-15' },
-  { slug: 'what-is-scrap-worth', title: 'What is scrap worth?', excerpt: 'How scrap metal prices are set — LME, purity, quantity, and transport distance.', date: '2024-12-10' },
-  { slug: 'common-mistakes-when-selling-scrap', title: 'Common mistakes when selling scrap', excerpt: 'Avoid these pitfalls that cost you money when selling metal scrap.', date: '2024-12-05' },
-  { slug: 'scrap-collection-how-it-works', title: 'Scrap collection — how it works', excerpt: 'On-call collection vs. on-site containers. Which option suits your scrap volume?', date: '2024-11-28' },
-  { slug: 'sort-scrap-for-better-prices', title: 'Sort scrap for better prices', excerpt: 'Sorting your metal by type and grade can significantly increase what you get paid.', date: '2024-11-20' },
-];
+import { articles } from '../../data/articles';
 ---
 
 <Layout
@@ -38,13 +27,12 @@ const articles = [
         <p class="mono text-[var(--color-faint)]">{a.date}</p>
         <h2 class="display mt-3 text-base font-bold">{a.title}</h2>
         <p class="mt-2 text-sm text-[var(--color-muted)]">{a.excerpt}</p>
-        <p class="mt-4 text-sm font-bold text-[var(--color-accent)]">Read more →</p>
+        <div class="mt-4 flex items-center justify-between">
+          <p class="text-sm font-bold text-[var(--color-accent)]">Read more →</p>
+          <span class="text-xs text-[var(--color-faint)]">{a.readTime} min</span>
+        </div>
       </a>
     ))}
-  </div>
-
-  <div class="mt-12 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800" data-reveal>
-    <strong>Placeholder:</strong> Article pages will be added in the next version. The topics and titles above reflect the content plan.
   </div>
 </section>
 
