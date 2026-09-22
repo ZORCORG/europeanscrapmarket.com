@@ -2,7 +2,7 @@
 // Body: { email: string }
 // Sends a magic link to the email (in production) or returns it (in dev).
 
-import { randomToken, json, getSecret, handleCORS } from '../../_lib/auth';
+import { randomToken, json, getSecret, handleCORS } from '../../../_lib/auth';
 
 export const onRequestPost: PagesFunction = async (context) => {
   const cors = handleCORS(context.request);

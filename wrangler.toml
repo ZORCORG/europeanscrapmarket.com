@@ -5,7 +5,7 @@ pages_build_output_dir = "dist"
 [[d1_databases]]
 binding = "DB"
 database_name = "esm-db"
-database_id = "placeholder-create-with-wrangler-d1-create"
+database_id = "14314819-8813-46e1-bfcb-d822fe027114"
 
 [vars]
 SITE_URL = "https://europeanscrapmarket.com"

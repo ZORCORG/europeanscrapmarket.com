@@ -1,7 +1,7 @@
 // API: GET  /api/listings — public list of active marketplace listings
 // API: POST /api/listings — create a listing (authenticated)
 
-import { getUser, json, handleCORS } from '../../_lib/auth';
+import { getUser, json, handleCORS } from '../_lib/auth';
 
 export const onRequestGet: PagesFunction = async (context) => {
   const cors = handleCORS(context.request);

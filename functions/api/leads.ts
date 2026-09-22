@@ -1,7 +1,7 @@
 // API: POST /api/leads — create a new scrap submission (lead)
 // API: GET  /api/leads — list leads (admin only)
 
-import { getUser, json, handleCORS } from '../../_lib/auth';
+import { getUser, json, handleCORS } from '../_lib/auth';
 
 export const onRequestPost: PagesFunction = async (context) => {
   const cors = handleCORS(context.request);

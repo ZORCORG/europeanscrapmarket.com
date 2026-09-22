@@ -1,7 +1,7 @@
 // API: POST /api/partners — submit a partner application
 // API: GET  /api/partners — list applications (admin only)
 
-import { getUser, json, handleCORS } from '../../_lib/auth';
+import { getUser, json, handleCORS } from '../_lib/auth';
 
 export const onRequestPost: PagesFunction = async (context) => {
   const cors = handleCORS(context.request);
