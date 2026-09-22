@@ -1,8 +1,8 @@
 // API: GET /api/portal/leads/[id] — get a single lead with its bids and messages
 // API: PUT /api/portal/leads/[id] — update lead status (accept/complete/archive)
 
-import { requirePartner, parseBody } from './_helpers';
-import { json } from '../../_lib/utils';
+import { requirePartner, parseBody } from '../_helpers';
+import { json } from '../../../_lib/utils';
 
 export const onRequestGet: PagesFunction = async (context) => {
   const { user, error } = await requirePartner(context);

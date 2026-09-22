@@ -2,8 +2,8 @@
 // This assigns the lead to the partner and rejects all other bids.
 // Body: { bidId }
 
-import { getSessionUser } from '../../../../src/lib/auth';
-import { json, handleCORS } from '../../../_lib/utils';
+import { getSessionUser } from '../../../../../src/lib/auth';
+import { json, handleCORS } from '../../../../_lib/utils';
 
 export const onRequestPost: PagesFunction = async (context) => {
   const cors = handleCORS(context.request);

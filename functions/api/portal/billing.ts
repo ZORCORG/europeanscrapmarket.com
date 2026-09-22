@@ -2,7 +2,7 @@
 // API: PUT /api/portal/billing — update subscription plan
 
 import { requirePartner, parseBody } from './_helpers';
-import { json } from '../_lib/utils';
+import { json } from '../../_lib/utils';
 
 const PLANS = {
   free: { priceMonthly: 0, label: 'Free', zonesCount: 0 },

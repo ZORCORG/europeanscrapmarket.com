@@ -2,7 +2,7 @@
 // Query: ?status=new|bidding|won|completed|all  &limit=50
 
 import { requirePartner } from './_helpers';
-import { json } from '../_lib/utils';
+import { json } from '../../_lib/utils';
 
 export const onRequestGet: PagesFunction = async (context) => {
   const { user, error } = await requirePartner(context);

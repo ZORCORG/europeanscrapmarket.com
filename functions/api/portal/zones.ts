@@ -4,7 +4,7 @@
 // Body: { country, region }
 
 import { requirePartner, parseBody } from './_helpers';
-import { json } from '../_lib/utils';
+import { json } from '../../_lib/utils';
 
 export const onRequestGet: PagesFunction = async (context) => {
   const { user, error } = await requirePartner(context);

@@ -4,7 +4,7 @@
 // API: DELETE /api/portal/ads — remove an ad
 
 import { requirePartner, parseBody } from './_helpers';
-import { json, randomToken } from '../_lib/utils';
+import { json, randomToken } from '../../_lib/utils';
 
 export const onRequestGet: PagesFunction = async (context) => {
   const { user, error } = await requirePartner(context);

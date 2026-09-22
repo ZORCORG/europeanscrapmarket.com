@@ -1,9 +1,9 @@
 // API: GET  /api/portal/leads/[id]/messages — get chat messages
 // API: POST /api/portal/leads/[id]/messages — send a message
 
-import { requirePartner, parseBody } from './_helpers';
-import { getSessionUser } from '../../../../src/lib/auth';
-import { json, handleCORS, randomToken } from '../../../_lib/utils';
+import { requirePartner, parseBody } from '../../_helpers';
+import { getSessionUser } from '../../../../../src/lib/auth';
+import { json, handleCORS, randomToken } from '../../../../_lib/utils';
 
 export const onRequestGet: PagesFunction = async (context) => {
   const { user, error } = await requirePartner(context);

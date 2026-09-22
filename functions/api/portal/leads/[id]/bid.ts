@@ -2,9 +2,9 @@
 // Body: { priceEur?, pricePerKg?, message?, priority?, action? }
 // action: 'place' (default) | 'withdraw'
 
-import { requirePartner, parseBody } from './_helpers';
-import { json } from '../../../_lib/utils';
-import { randomToken } from '../../../_lib/utils';
+import { requirePartner, parseBody } from '../../_helpers';
+import { json } from '../../../../_lib/utils';
+import { randomToken } from '../../../../_lib/utils';
 
 export const onRequestPost: PagesFunction = async (context) => {
   const { user, error } = await requirePartner(context);
